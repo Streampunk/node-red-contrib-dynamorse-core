@@ -1,0 +1,85 @@
+<!--
+  Copyright 2016 Streampunk Media Ltd.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<script type="text/javascript">
+  RED.nodes.registerType('rtp-ext', {
+    category: 'config',
+    color: '#E3CA95',
+    defaults: {
+      name : { value : "rtp-extensions-default" },
+      origin_timestamp_id : { value : 1, validate : RED.validators.number() },
+      smpte_tc_id : { value : 2, validate : RED.validators.number() },
+      smpte_tc_param : { value : "3600@90000/25",
+        validate : RED.validators.regex(/[0-9]+@[0-9]+\/[0-9]+/) },
+      flow_id_id : { value : 3, validate : RED.validators.number() },
+      source_id_id : { value : 4, validate : RED.validators.number() },
+      grain_flags_id : { value : 5, validate : RED.validators.number() },
+      sync_timestamp_id : { value : 7, validate : RED.validators.number() },
+      grain_duration_id : { value : 9, validate : RED.validators.number() },
+      ts_refclk : { value : 'ptp=IEEE1588-2008:dd-a9-3e-5d-c7-28-28-dc' }
+           // Constant ID for a dynamorse generated clock
+    },
+    label: function() {
+      return (this.name) ? this.name : "rtp-ext";
+    }
+  });
+</script>
+
+<script type="text/x-red" data-template-name="rtp-ext">
+  <div class='p'>Define a set of header extensions used within an NMOS RTP stream.</div>
+  <br/>
+  <div class="form-row">
+      <label for="node-config-input-name" style="width: 180px"><i class="fa fa-tag"></i> name</label>
+      <input type="text" id="node-config-input-name" style="width: 180px" placeholder="rtp-extensions-default"></input>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-origin_timestamp_id" style="width: 180px"><i class="fa fa-tag"></i> origin timestamp</label>
+      <input type="number" id="node-config-input-origin_timestamp_id" placeholder="1" style="width: 100px"></input>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-smpte_tc_id" style="width: 180px"><i class="fa fa-tag"></i> smpte tc</label>
+      <input type="number" id="node-config-input-smpte_tc_id" placeholder="2" style="width: 100px"></input><br/>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-smpte_tc_param" style="width: 180px"><i class="fa fa-code-fork"></i> tc params</label>
+      <input type="text" id="node-config-input-smpte_tc_param" placeholder="3600@90000/25" style="width: 120px"></input>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-flow_id_id" style="width: 180px"><i class="fa fa-tag"></i> flow id</label>
+      <input type="number" id="node-config-input-flow_id_id" placeholder="3" style="width: 100px"></input>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-source_id_id" style="width: 180px"><i class="fa fa-tag"></i> source id</label>
+      <input type="number" id="node-config-input-source_id_id" placeholder="4" style="width: 100px"></input>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-grain_flags_id" style="width: 180px"><i class="fa fa-tag"></i> grain flags</label>
+      <input type="number" id="node-config-input-grain_flags_id" placeholder="5" style="width: 100px"></input>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-sync_timestamp_id" style="width: 180px"><i class="fa fa-tag"></i> sync timestamp</label>
+      <input type="number" id="node-config-input-sync_timestamp_id" placeholder="7" style="width: 100px"></input>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-grain_duration_id" style="width: 180px"><i class="fa fa-tag"></i> grain duration</label>
+      <input type="number" id="node-config-input-grain_duration_id" placeholder="9" style="width: 100px"></input>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-ts_refclk"><i class="fa fa-tag"></i> ts refclk</label>
+      <input type="text" id="node-config-input-ts_refclk" placeholder="ptp=IEEE1588-2008:dd-a9-3e-5d-c7-28-28-dc"></input>
+  </div>
+  <!-- TODO: Add the ability to define additional extension flags. -->
+</script>

@@ -1,0 +1,61 @@
+<!--
+  Copyright 2016 Streampunk Media Ltd.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<script type="text/javascript">
+  RED.nodes.registerType('self',{
+    category: 'config',
+    color: '#E3CA95',
+    defaults: {
+      nmos_id : { value : "" },
+      version : { value : "" },
+      nmos_label : { value : "" },
+      href : { value : "" },
+      hostname : { value : "" },
+      ledgerPort : { value : "3101" },
+      logging : { value : "trace" },
+      rtpExtId : { value : "" }
+    },
+    label: function() {
+      return (this.nmos_label) ? this.nmos_label : "self";
+    }
+  });
+</script>
+
+<script type="text/x-red" data-template-name="self">
+  <div class='p'>Define the properties of the NMOS node that this Dynamorse application
+  represents. Do not define more than one of these nodes.</div>
+  <br/>
+  <div class="form-row">
+      <label for="node-config-input-nmos_id"><i class="fa fa-hashtag"></i> id</label>
+      <input type="text" id="node-config-input-nmos_id" readonly></input>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-version"><i class="fa fa-code-fork"></i> version</label>
+      <input type="text" id="node-config-input-version" readonly></input>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-nmos_label"><i class="fa fa-tag"></i> label</label>
+      <input type="text" id="node-config-input-nmos_label"></input>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-href"><i class="fa fa-link"></i> HREF</label>
+      <input type="text" id="node-config-input-href"></input>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-hostname"><i class="fa fa-desktop"></i> hostname</label>
+      <input type="text" id="node-config-input-hostname"></input>
+  </div>
+</script>

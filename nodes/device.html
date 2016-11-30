@@ -1,0 +1,70 @@
+<!--
+  Copyright 2016 Streampunk Media Ltd.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<script type="text/javascript">
+  RED.nodes.registerType('device',{
+    category: 'config',
+    defaults: {
+      nmos_id : { value : "" },
+      version : { value : "" },
+      nmos_type : { value : "urn:x-nmos:device:generic" },
+      nmos_label : { value : "" },
+      node_id : { value : "" },
+      node_ref : { value : "", type : "self" },
+      senders : { value : [] },
+      receivers : { value : [] }
+    },
+    label: function() {
+      return (this.nmos_label) ? this.nmos_label : "device";
+    }
+  });
+</script>
+
+<script type="text/x-red" data-template-name="device">
+  <div>Define the properties of a device exposed to NMOS from Dynamorse.</div>
+  <br/>
+  <div class="form-row">
+      <label for="node-config-input-nmos_id"><i class="fa fa-hashtag"></i> id</label>
+      <input type="text" id="node-config-input-nmos_id" readonly placeholder="automatic"></input>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-version"><i class="fa fa-code-fork"></i> version</label>
+      <input type="text" id="node-config-input-version" readonly placeholder="automatic"></input>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-nmos_label"><i class="fa fa-tag"></i> label</label>
+      <input type="text" id="node-config-input-nmos_label"></input>
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-nmos_type"><i class="fa fa-caret-square-o-down"></i> type</label>
+    <select id="node-config-input-nmos_type">
+      <option value="urn:x-nmos:device:pipeline">pipeline</option>
+      <option value="urn:x-nmos:device:generic" selected>generic</option>
+    </select>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-node_id"><i class="fa fa-fort-awesome"></i> node ID</label>
+      <input type="text" id="node-config-input-node_id" readonly placeholder="automatic"></input>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-senders"><i class="fa fa-sign-out"></i> senders</label>
+      <input type="text" id="node-config-input-senders" readonly></input>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-receivers"><i class="fa fa-sign-in"></i> receivers</label>
+      <input type="text" id="node-config-input-receivers" readonly></input>
+  </div>
+</script>
