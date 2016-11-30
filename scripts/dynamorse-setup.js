@@ -181,5 +181,10 @@ function setupGlobalFlow() {
   });
 }
 
-setTimeout(setupDynamorseTab(), 1000);
-setTimeout(setupGlobalFlow(), 2000);
+console.log("Setting up Dynamorse Tab");
+setupDynamorseTab(), 1000;
+
+console.log("Setting up Global Flow");
+setupGlobalFlow(), 2000;
+
+console.log("Setup complete");
