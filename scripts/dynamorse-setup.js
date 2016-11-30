@@ -182,9 +182,9 @@ function setupGlobalFlow() {
 }
 
 console.log("Setting up Dynamorse Tab");
-setupDynamorseTab(), 1000;
+//setupDynamorseTab();
 
 console.log("Setting up Global Flow");
-setupGlobalFlow(), 2000;
+//setupGlobalFlow();
 
 console.log("Setup complete");
