@@ -73,8 +73,14 @@ function setupDynamorseTab() {
       console.log(`problem with dynamorse tab request: ${e.message}`);
     });
   });
-  dynamorseTabReq.write(dynamorseTab);
-  dynamorseTabReq.end();
+
+  try {
+    dynamorseTabReq.write(dynamorseTab);
+    dynamorseTabReq.end();
+  }
+  catch(e) {
+    console.log("dynamorse tab request error: " + e);
+  }
 }
 
 function setupGlobalFlow() {
@@ -162,13 +168,18 @@ function setupGlobalFlow() {
               console.log(`problem with global flow request: ${e.message}`);
             });
           });
-          globalFlowReq.write(globalFlow);
-          globalFlowReq.end();
+          try {
+            globalFlowReq.write(globalFlow);
+            globalFlowReq.end();
+          }
+          catch(e) {
+            console.log("global flow request error: " + e);
+          }
         });
       });
     });
   });
 }
 
-setupDynamorseTab();
-setupGlobalFlow();
+setTimeout(setupDynamorseTab(), 1000);
+setTimeout(setupGlobalFlow(), 2000);
