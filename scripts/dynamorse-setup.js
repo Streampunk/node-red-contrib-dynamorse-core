@@ -58,24 +58,17 @@ function setupDynamorseTab() {
   }, function (res) {
     res.setEncoding('utf8');
     res.on('data', function (chunk) {
-      //console.log(`Response: ${chunk}`);
     });
     res.on('end', function () {
-      //console.log(`Response complete`);
+      console.log(" - restart Node-RED to complete dynamorse configuration");
     });
-    res.on('error', function (e) {
-      console.log(`problem with dynamorse tab request: ${e.message}`);
-    });
+  }).on('error', function (e) {
+    console.log(` - problem with dynamorse tab request: ${e.message}`);
+    console.log("   - run dynamorse-setup.exe once Node-RED is started to configure dynamorse")
   });
 
-  try {
-    dynamorseTabReq.write(dynamorseTab);
-    dynamorseTabReq.end();
-    console.log("Restart Node-RED to complete dynamorse configuration");
-  }
-  catch(e) {
-    console.log("dynamorse tab request error: " + e);
-  }
+  dynamorseTabReq.write(dynamorseTab);
+  dynamorseTabReq.end();
 }
 
 console.log("Setting up Dynamorse Tab");
