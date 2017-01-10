@@ -12,21 +12,26 @@
     "highland": "^2.5.1",
     "seamless-immutable": "^4.1.1",
     "uuid": "^2.0.1",
+    "ws": "^1.1.1",
     "nmos-ledger": "^1.0.16"
   },
   "devDependencies": {
     "tape": "^4.2.2"
   },
-  "scripts" : {
+  "scripts": {
     "test": "tape test/*Spec.js",
-    "postinstall" : "node scripts/dynamorse-setup.js"
+    "postinstall": "node scripts/dynamorse-setup.js"
   },
   "node-red": {
     "nodes": {
       "self": "nodes/self.js",
       "device": "nodes/device.js",
       "rtp-ext": "nodes/rtp-ext.js",
-      "grain-xray": "nodes/90-grain-xray.js"
+      "grain-xray": "nodes/90-grain-xray.js",
+      "funnelGen": "test/funnelGen.js",
+      "funnelHigh": "test/funnelHigh.js",
+      "valveTest": "test/valveTest.js",
+      "spoutTest": "test/spoutTest.js"
     }
   },
   "repository": {

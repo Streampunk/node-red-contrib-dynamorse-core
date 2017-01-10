@@ -19,6 +19,7 @@ var Queue = require('fastqueue');
 var dgram = require('dgram');
 var util = require('util');
 var H = require('highland');
+var webSock = require('./webSock.js').webSock;
 
 var hostname = require('os').hostname();
 var pid = process.pid;
@@ -42,8 +43,20 @@ var setStatus = function (fill, shape, text) {
   }
 }
 
+var ws = null;
 var soc = dgram.createSocket('udp4');
 var nodeCount = 0;
+
+function webSockMsg(node, src) {
+  this.node = node;
+  this.src = src;
+}
+webSockMsg.prototype.send = function(obj) {
+  //console.log(`Send: ${this.src}, ${JSON.stringify(obj)}`);
+  obj.src = this.src;
+  if (ws)
+    ws.send(this.node, obj);
+}
 
 function safeStatString (s) {
   // console.log('+++', s);
@@ -59,6 +72,7 @@ function Funnel (config) {
   this.setStatus = setStatus.bind(this);
   var workTimes = [];
   var paused = false;
+
   var soc = dgram.createSocket('udp4');
   // console.log('***', util.inspect(this.setStatus, { showHidden: true }));
   node.setStatus('grey', 'ring', 'initialising');
@@ -68,12 +82,24 @@ function Funnel (config) {
   if (config.maxBuffer && typeof config.maxBuffer === 'number' && config.maxBuffer > 0)
     maxBuffer = config.maxBuffer|0;
 
+  if (!ws) {
+    var wsPort = 0;
+    if (config.wsPort && typeof config.wsPort === 'string')
+      config.wsPort = +config.wsPort;
+    if (config.wsPort && typeof config.wsPort === 'number' && config.wsPort > 0)
+      wsPort = config.wsPort|0;
+    ws = new webSock(node, wsPort);
+  }
+  this.wsMsg = new webSockMsg(node, config.name||"funnel");
+
   var pull = function (id) {
     node.log(`Pull received with id ${id}, queue length ${queue.length}, pending ${JSON.stringify(pending)}`);
     if (pending.indexOf(id) < 0) pending.push(id);
     if ((queue.length > 0) && (pending.length === wireCount)) {
       pending = [];
       var payload = queue.shift();
+      if (!isEnd(payload))
+        node.wsMsg.send({"pull": payload});
       var message = new Buffer(`punkd value=${payload}`)
       soc.send(message, 0, message.length, 8765, influx);
       if (isEnd(payload)) {
@@ -90,6 +116,7 @@ function Funnel (config) {
       });
     }
     if (paused && queue.length < 0.5 * maxBuffer) {
+      node.wsMsg.send({"resume": queue.length});
       node.log("Resuming.");
       paused = false;
       next();
@@ -99,6 +126,7 @@ function Funnel (config) {
     if (err) {
       node.log(`Push received with error '${err}', queue length ${queue.length}, pending ${JSON.stringify(pending)}`);
       node.setStatus('red', 'dot', 'error');
+      node.wsMsg.send({"error": err});
       node.send({
         payload : null,
         error : err,
@@ -108,14 +136,21 @@ function Funnel (config) {
       node.log(`Push received with value ${val}, queue length ${queue.length}, pending ${JSON.stringify(pending)}`);
       if (queue.length <= maxBuffer) {
         // node.log(queue);
+        if (!isEnd(val))
+          node.wsMsg.send({"push": val});
         queue.push(val);
       } else {
+        node.wsMsg.send({"drop": val});
         node.warn(`Dropping value ${val} from buffer as maximum length of ${maxBuffer} exceeded.`);
       }
 
       if (pending.length === wireCount) {
         var payload = queue.shift();
         node.log(`Sending ${payload} with pending ${JSON.stringify(pending)}.`);
+        if (isEnd(val))
+          node.wsMsg.send({"end": 0});
+        else
+          node.wsMsg.send({"send": payload});
         pending = [];
         var message = new Buffer(`punkd value=${payload}`)
         soc.send(message, 0, message.length, 8765, influx);
@@ -154,8 +189,10 @@ function Funnel (config) {
     setImmediate(function () {
       if (queue.length < 0.8 * maxBuffer) {
         workStart = process.hrtime();
+        node.wsMsg.send({"work": queue.length});
         work(push, next);
       } else {
+        node.wsMsg.send({"pause": queue.length});
         paused = true;
         node.log("Pausing.");
       }
@@ -165,31 +202,36 @@ function Funnel (config) {
   this.generator = function (cb) {
     work = cb;
     node.setStatus('green', 'dot', 'generating');
-    next();
+    ws.open(function() {
+      next();
+    });
   }
   var highlandStream = null;
   this.highland = function (stream) {
-    highlandStream = stream.consume(function (err, x, hpush, hnext) {
-      if (err) {
-        push(err);
-        hnext();
-      } else if (x === H.nil) {
-        hpush (null, H.nil);
-      } else {
-          if (workStart) { workTimes.push(process.hrtime(workStart)); }
-        push(null, x);
-        workStart = process.hrtime();
-        if (queue.length > 0.8 * maxBuffer) {
-          paused = true;
-          next = function () { node.log('Resuming highland.'); hnext(); };
-          node.log('Pausing highland.')
-        } else {
+    ws.open(function() {
+      highlandStream = stream.consume(function (err, x, hpush, hnext) {
+        if (err) {
+          push(err);
           hnext();
+        } else if (x === H.nil) {
+          hpush (null, H.nil);
+        } else {
+          if (workStart) { workTimes.push(process.hrtime(workStart)); }
+          push(null, x);
+          workStart = process.hrtime();
+          if (queue.length > 0.8 * maxBuffer) {
+            node.wsMsg.send({"pause": queue.length});
+            paused = true;
+            next = function () { node.log('Resuming highland.'); hnext(); };
+            node.log('Pausing highland.')
+          } else {
+            hnext();
+          }
         }
-      }
-    })
-    .done(function () {
-      push(null, theEnd);
+      })
+      .done(function () {
+        push(null, theEnd);
+      });
     });
     node.setStatus('green', 'dot', 'generating');
   }
@@ -231,6 +273,8 @@ function Valve (config) {
   var wireCount = config.wires[0].length;
   var pending = config.wires[0];
   var node = this;
+  this.wsMsg = new webSockMsg(node, config.name||"valve");
+
   this.nodeStatus = "";
   this.setStatus = setStatus.bind(this);
   var workTimes = [];
@@ -254,7 +298,8 @@ function Valve (config) {
           node.setStatus('grey', 'ring', 'done');
         };
         node.setStatus('grey', 'ring', 'done');
-      };
+      } else
+        node.wsMsg.send({"pull": payload});
       node.send({
         payload : payload,
         error : null,
@@ -262,6 +307,7 @@ function Valve (config) {
       });
     }
     if (paused.length > 0 && queue.length < 0.5 * maxBuffer) {
+      node.wsMsg.send({"resume": queue.length});
       node.log("Resuming.");
       var resumePull = paused;
       paused = [];
@@ -273,6 +319,7 @@ function Valve (config) {
     node.log(`Push received with value ${val}, queue length ${queue.length}, pending ${JSON.stringify(pending)}`);
     if (err) {
       node.setStatus('red', 'dot', 'error');
+      node.wsMsg.send({"error": err});
       node.send({
         payload : null,
         error : err,
@@ -281,8 +328,13 @@ function Valve (config) {
     } else {
       if (queue.length <= maxBuffer) {
       //  node.log(queue);
+        if (isEnd(val))
+          node.wsMsg.send({"end": 0});
+        else
+          node.wsMsg.send({"push": val});
         queue.push(val);
       } else {
+        node.wsMsg.send({"drop": val});
         node.warn(`Dropping value ${val} from buffer as maximum length of ${maxBuffer} exceeded.`);
       }
 
@@ -322,6 +374,7 @@ function Valve (config) {
       workTimes.push(process.hrtime(startTime));
       if (queue.length > 0.8 * maxBuffer) {
         paused.push(msg.pull);
+        node.wsMsg.send({"pause": queue.length});
         node.log("Pausing.");
       } else {
         setImmediate(function () { msg.pull(node.id) });
@@ -330,6 +383,7 @@ function Valve (config) {
   };
   this.on('input', function(msg) {
     if (msg.error) {
+      node.wsMsg.send({"error": msg.error});
       work(msg.error, null, push, next(msg));
     } else {
       work(null, msg.payload, push, next(msg));
@@ -373,14 +427,19 @@ function Valve (config) {
 }
 
 function Spout (config) {
+  var node = this;
+  this.wsMsg = new webSockMsg(node, config.name||"spout");
+  var numStreams = config.numStreams||1;
+  var numEnds = 0;
+
   var eachFn = null;
   var doneFn = function () { };
   var errorFn = function (err, n) { // Default error handler shuts the pipeline
+    node.wsMsg.send({"error": err});
     node.error(`Unhandled error ${err.toString()}.`);
     doneFn = function () { }
     eachFn = null;
   }
-  var node = this;
   this.nodeStatus = "";
   this.setStatus = setStatus.bind(this);
   node.setStatus('grey', 'ring', 'initialising');
@@ -399,7 +458,10 @@ function Spout (config) {
     var startTime = process.hrtime();
     return function () {
       workTimes.push(process.hrtime(startTime));
-      setImmediate(function () { msg.pull(node.id); });
+      setImmediate(function () { 
+        node.wsMsg.send({"pull": node.id}); 
+        msg.pull(node.id); 
+      });
     };
   };
   this.on('input', function (msg) {
@@ -407,13 +469,18 @@ function Spout (config) {
       node.setStatus('red', 'dot', 'error');
       errorFn(msg.error, next(msg));
     } else if (isEnd(msg.payload)) {
-      node.setStatus('grey', 'ring', 'done');
-      var execDone = doneFn;
-      doneFn = function () { }
-      eachFn = null;
-      execDone();
+      numEnds++;
+      if (numEnds === numStreams) {
+        node.wsMsg.send({"end": 0});
+        node.setStatus('grey', 'ring', 'done');
+        var execDone = doneFn;
+        doneFn = function () { }
+        eachFn = null;
+        execDone();
+      }
     } else {
       if (eachFn) {
+        node.wsMsg.send({"receive": msg.payload});
         eachFn(msg.payload, next(msg));
       }
     }
@@ -440,6 +507,9 @@ function Spout (config) {
     soc.send(message, 0, message.length, 8765, influx);
   }, 1000);
   this.close = function (done) {
+    node.wsMsg.send({"close": 0});
+    ws.close();
+    ws = null;
     setTimeout(function () { clearInterval(metrics) }, 2000);
   };
   this.preFlightError = function (e) {

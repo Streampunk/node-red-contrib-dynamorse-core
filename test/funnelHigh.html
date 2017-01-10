@@ -1,0 +1,72 @@
+<!--
+  Copyright 2016 Streampunk Media Ltd.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<script type="text/javascript">
+  RED.nodes.registerType('funnelHigh',{
+    category: 'testing',
+    color: '#C1C1A6',
+    defaults: {
+      name : { value : "" },
+      delay : { value : "0", validate : RED.validators.number() },
+      start : { value : "0", validate : RED.validators.number() },
+      end : { value : "9", validate : RED.validators.number() },
+      repeat : { value : false },
+      maxBuffer : { value : 10, validate : RED.validators.number() },
+      wsPort : { value : 0, validate : RED.validators.number() }
+    },
+    inputs:0,
+    outputs:1,
+    icon: "funnel.png",
+    label: function() {
+      return this.name ||  "funnelHigh";
+    }
+  });
+</script>
+
+<script type="text/x-red" data-template-name="funnelHigh">
+  <div class="form-row"><i class="fa fa-sign-in"></i> Count start and end:</div>
+  <div class="form-row"><label></label>
+    start <input type="text" id="node-input-start" placeholder="0" style="width:100px;"/>
+    &nbsp;&nbsp;end <input type="text" id="node-input-end" placeholder="9" style="width:100px;"/>
+  </div>
+  <div class="form-row">
+     <label for="node-input-repeat"><i class="fa fa-repeat"></i> repeat?</label>
+     <input type="checkbox" id="node-input-repeat" unchecked></input>
+  </div>
+  <div class="form-row">
+    <label for="node-input-delay"><i class="fa fa-clock-o"></i> delay</label>
+    <input type="text" id="node-input-delay" placeholder="0">
+  </div>
+  <br/>
+  <!-- Common to all funnel nodes -->
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> name</label>
+    <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+  <div class="form-row">
+    <label for="node-input-maxBuffer"><i class="fa fa-suitcase"></i> max buffer</label>
+    <input type="text" id="node-input-maxBuffer" placeholder="10">
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-wsPort"><i class="fa fa-eye"></i> websock port</label>
+    <input type="text" id="node-input-wsPort" placeholder="0">
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="funnelHigh">
+  <p>Test funnel node with one output that uses highland to generate a bounded sequence of integers.</p>
+</script>
