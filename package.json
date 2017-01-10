@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-dynamorse-core",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Setup and support for Streampunk Media's Node-RED nodes",
   "author": "Streampunk Media Ltd",
   "license": "Apache-2.0",
