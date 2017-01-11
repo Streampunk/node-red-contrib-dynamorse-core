@@ -10,7 +10,7 @@ dependencies:
     - npm install -g node-red
     - npm install -g pm2
     - pm2 start /opt/circleci/nodejs/v4.2.6/bin/node-red
-    - curl -d '{"module": "node-red-contrib-dynamorse-core"}' -H 'Content-Type: application/json' 127.0.0.1:1880/nodes
+    - curl -d ./adminInstall.json -H 'Content-Type: application/json' 127.0.0.1:1880/nodes
 
 test:
   override:
