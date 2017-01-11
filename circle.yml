@@ -1,6 +1,10 @@
 machine:
   node:
     version: 4.7.2
+
+dependencies:
+  override:
+    - npm install
   post:
     - npm install -g tape
     - npm install -g node-red
