@@ -1,3 +1,4 @@
+[![CircleCI](https://circleci.com/gh/Streampunk/node-red-contrib-dynamorse-core.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/Streampunk/node-red-contrib-dynamorse-core)
 # Dynamorse
 
 ![overview graphic](images/overview.png)
