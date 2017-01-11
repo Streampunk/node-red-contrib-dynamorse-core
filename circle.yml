@@ -2,9 +2,11 @@ machine:
   node:
     version: 4.7.2
   post:
-    - ./node-red:
-      background: true
-    - sleep 5
+    - npm install -g tape
+    - npm install -g node-red
+    - npm install -g pm2
+    - pm2 start /opt/circleci/nodejs/v4.2.6/bin/node-red
+    - curl -d '{"module": "node-red-contrib-dynamorse-core"}' -H 'Content-Type: application/json' 127.0.0.1:1880/nodes
 
 test:
   override:
