@@ -4,6 +4,7 @@ machine:
 
 dependencies:
   post:
+    - npm install -g tap-xunit
     - npm install -g node-red
     - npm install -g pm2
     - pm2 start /opt/circleci/nodejs/v4.7.2/bin/node-red
@@ -12,6 +13,5 @@ dependencies:
 
 test:
   override:
-    - npm install -g tap-xunit
     - mkdir $CIRCLE_TEST_REPORTS/xunit
     - npm test | tap-xunit > $CIRCLE_TEST_REPORTS/xunit/results.xml

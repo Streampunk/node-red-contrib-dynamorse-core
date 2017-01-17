@@ -15,7 +15,6 @@
 
 module.exports = {
    Redioactive : require('./util/Redioactive.js'),
-   TestUtil : require('./util/testUtil.js'),
    Timecode : require('./model/Timecode.js'),
    Grain : require('./model/Grain.js'),
    H264 : require('./util/H264.js')

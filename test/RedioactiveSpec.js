@@ -13,27 +13,26 @@
   limitations under the License.
 */
 
-var nodeRedTest = require('../util/testUtil.js').nodeRedTest;
-var testNodes = require('../util/testUtil.js').testNodes;
+var TestUtil = require('dynamorse-test').TestUtil;
 
 var funnel1NodeId = "24fde3d7.b7544c";
 var funnel2NodeId = "7c968c40.836974";
 var valveNodeId = "634c3672.78be18";
 var spoutNodeId = "f2186999.7e5f78";
 
-nodeRedTest('A funnel->spout flow is posted to Node-RED', {
+TestUtil.nodeRedTest('A funnel->spout flow is posted to Node-RED', {
   numPushes: 10,
   funnelMaxBuffer: 10,
   spoutTimeout: 0
 }, function getFlow(params) {
-  var testFlow = JSON.parse(testNodes.baseTestFlow);
-  testFlow.nodes[0] = JSON.parse(testNodes.funnelTestNode);
+  var testFlow = JSON.parse(TestUtil.testNodes.baseTestFlow);
+  testFlow.nodes[0] = JSON.parse(TestUtil.testNodes.funnelTestNode);
   testFlow.nodes[0].id = `${funnel1NodeId}`;
   testFlow.nodes[0].end = params.numPushes-1;
   testFlow.nodes[0].maxBuffer = params.funnelMaxBuffer;
   testFlow.nodes[0].wires[0][0] = `${spoutNodeId}`;
 
-  testFlow.nodes[1] = JSON.parse(testNodes.spoutTestNode);
+  testFlow.nodes[1] = JSON.parse(TestUtil.testNodes.spoutTestNode);
   testFlow.nodes[1].id = `${spoutNodeId}`;
   testFlow.nodes[1].timeout = params.spoutTimeout;
   return testFlow;
@@ -49,27 +48,27 @@ nodeRedTest('A funnel->spout flow is posted to Node-RED', {
   }
 });
 
-nodeRedTest('A funnel->valve->spout flow is posted to Node-RED', {
+TestUtil.nodeRedTest('A funnel->valve->spout flow is posted to Node-RED', {
   numPushes: 10,
   funnelMaxBuffer: 4,
   valveMaxBuffer: 4,
   valveTimeout: 0,
   spoutTimeout: 0
 }, function getFlow(params) {
-  var testFlow = JSON.parse(testNodes.baseTestFlow);
-  testFlow.nodes[0] = JSON.parse(testNodes.funnelTestNode);
+  var testFlow = JSON.parse(TestUtil.testNodes.baseTestFlow);
+  testFlow.nodes[0] = JSON.parse(TestUtil.testNodes.funnelTestNode);
   testFlow.nodes[0].id = `${funnel1NodeId}`;
   testFlow.nodes[0].end = params.numPushes-1;
   testFlow.nodes[0].maxBuffer = params.funnelMaxBuffer;
   testFlow.nodes[0].wires[0][0] = `${valveNodeId}`;
 
-  testFlow.nodes[1] = JSON.parse(testNodes.valveTestNode);
+  testFlow.nodes[1] = JSON.parse(TestUtil.testNodes.valveTestNode);
   testFlow.nodes[1].id = `${valveNodeId}`;
   testFlow.nodes[1].maxBuffer = params.valveMaxBuffer;
   testFlow.nodes[1].timeout = params.valveTimeout;
   testFlow.nodes[1].wires[0][0] = `${spoutNodeId}`;
 
-  testFlow.nodes[2] = JSON.parse(testNodes.spoutTestNode);
+  testFlow.nodes[2] = JSON.parse(TestUtil.testNodes.spoutTestNode);
   testFlow.nodes[2].id = `${spoutNodeId}`;
   testFlow.nodes[2].timeout = params.spoutTimeout;
   return testFlow;
@@ -85,7 +84,7 @@ nodeRedTest('A funnel->valve->spout flow is posted to Node-RED', {
   }
 });
 
-nodeRedTest('A funnelx2->spout flow is posted to Node-RED', {
+TestUtil.nodeRedTest('A funnelx2->spout flow is posted to Node-RED', {
   numPushes: 10,
   funnelMaxBuffer: 10,
   spoutTimeout: 0
@@ -96,8 +95,8 @@ nodeRedTest('A funnelx2->spout flow is posted to Node-RED', {
   params.funCount = [];
   for (var i=0; i<params.numPushes; ++i)
     params.funCount[i] = 0;
-  var testFlow = JSON.parse(testNodes.baseTestFlow);
-  testFlow.nodes[0] = JSON.parse(testNodes.funnelTestNode);
+  var testFlow = JSON.parse(TestUtil.testNodes.baseTestFlow);
+  testFlow.nodes[0] = JSON.parse(TestUtil.testNodes.funnelTestNode);
   testFlow.nodes[0].name = 'funnel1';
   testFlow.nodes[0].id = `${funnel1NodeId}`;
   testFlow.nodes[0].end = params.numPushes-1;
@@ -105,7 +104,7 @@ nodeRedTest('A funnelx2->spout flow is posted to Node-RED', {
   testFlow.nodes[0].delay = 0;
   testFlow.nodes[0].wires[0][0] = `${spoutNodeId}`;
 
-  testFlow.nodes[1] = JSON.parse(testNodes.funnelTestNode);
+  testFlow.nodes[1] = JSON.parse(TestUtil.testNodes.funnelTestNode);
   testFlow.nodes[1].name = 'funnel2';
   testFlow.nodes[1].y = 200;
   testFlow.nodes[1].id = `${funnel2NodeId}`;
@@ -114,7 +113,7 @@ nodeRedTest('A funnelx2->spout flow is posted to Node-RED', {
   testFlow.nodes[0].delay = 4;
   testFlow.nodes[1].wires[0][0] = `${spoutNodeId}`;
 
-  testFlow.nodes[2] = JSON.parse(testNodes.spoutTestNode);
+  testFlow.nodes[2] = JSON.parse(TestUtil.testNodes.spoutTestNode);
   testFlow.nodes[2].id = `${spoutNodeId}`;
   testFlow.nodes[2].timeout = params.spoutTimeout;
   testFlow.nodes[2].numStreams = 2;
