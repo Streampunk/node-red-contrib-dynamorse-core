@@ -1,0 +1,81 @@
+<!--
+  Copyright 2016 Streampunk Media Ltd.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<script type="text/javascript">
+  RED.nodes.registerType('funnelGrain', {
+    category: 'testing',
+    color: '#C1C1A6',
+    defaults: {
+      name : { value : "" },
+      delay : { value : "0", validate : RED.validators.number() },
+      numPushes : { value : 10, validate : RED.validators.number() },
+      format : { value : "video" },
+      width : { value : 1920, validate : RED.validators.number() },
+      height : { value : 1080, validate : RED.validators.number() },
+      channels : { value : 2, validate : RED.validators.number() },
+      bitsPerSample : { value : 16, validate : RED.validators.number() },
+      maxBuffer : { value : 10, validate : RED.validators.number() }
+    },
+    inputs:0,
+    outputs:1,
+    icon: "funnel.png",
+    label: function() {
+      return this.name || "funnelGrain";
+    }
+  });
+</script>
+
+<script type="text/x-red" data-template-name="funnelGrain">
+  <div class="form-row">
+    <label for="node-input-delay"><i class="fa fa-clock-o"></i> delay</label>
+    <input type="text" id="node-input-delay" placeholder="0">
+  </div>
+  <div class="form-row">
+    <label for="node-input-numPushes"><i class="fa fa-sign-in"></i> num pushes</label>
+    <input type="text" id="node-input-numPushes" placeholder="10">
+  </div>
+  <div class="form-row">
+    <label for="node-input-format"><i class="fa fa-video-camera"></i> format</label>
+    <select id="node-input-format">
+      <option value="video" selected>video</option>
+      <option value="audio">audio</option>
+    </select>
+  </div>
+  <div class="form-row"><i class="fa fa-arrows"></i> video details:</div>
+  <div class="form-row"><label></label>
+    width <input type="text" id="node-input-width" placeholder="1920" style="width:100px;"/>
+    &nbsp;&nbsp;height <input type="text" id="node-input-height" placeholder="1080" style="width:100px;"/>
+  </div>
+  <div class="form-row"><i class="fa fa-arrows"></i> audio details:</div>
+  <div class="form-row"><label></label>
+    channels <input type="text" id="node-input-channels" placeholder="2" style="width:100px;"/>
+    &nbsp;&nbsp;bits <input type="text" id="node-input-bitsPerSample" placeholder="16" style="width:100px;"/>
+  </div>
+  <br/>
+  <!-- Common to all funnel nodes -->
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> name</label>
+    <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+  <div class="form-row">
+    <label for="node-input-maxBuffer"><i class="fa fa-suitcase"></i> max buffer</label>
+    <input type="text" id="node-input-maxBuffer" placeholder="10">
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="funnelGrain">
+  <p>Test funnel node with one output that generates a sequence of grains containing either audio or video test data.</p>
+</script>

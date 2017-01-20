@@ -15,29 +15,36 @@
 
 var util = require('util');
 var redioactive = require('../util/Redioactive.js')
+var H = require('highland');
 
-module.exports = function (RED) {
-  function FunnelGen (config) {
-    RED.nodes.createNode(this, config);
-    redioactive.Funnel.call(this, config);
+function inlet(config) {
+  this.count = +config.start;
 
-    this.count = +config.start;
-    this.generator(function (push, next) {
-      if (this.count <= +config.end) {
+  return H(function (push, next) {
+    if (this.count <= +config.end) {
+      push(null, this.count++);
+      setTimeout(next, +config.delay);
+    } else {
+      if (config.repeat) {
+        this.count = config.start;
         push(null, this.count++);
         setTimeout(next, +config.delay);
       } else {
-        if (config.repeat) {
-          this.count = config.start;
-          push(null, this.count++);
-          setTimeout(next, +config.delay);
-        } else {
-          push(null, redioactive.end);
-        }
+        push(null, redioactive.end);
       }
-    }.bind(this));
+    }
+  }.bind(this));
+}
+
+module.exports = function (RED) {
+  function FunnelCount (config) {
+    RED.nodes.createNode(this,config);
+    redioactive.Funnel.call(this, config);
+
+    this.highland(new inlet(config));
     this.on('close', this.close);
   }
-  util.inherits(FunnelGen, redioactive.Funnel);
-  RED.nodes.registerType("funnelGen", FunnelGen);
+
+  util.inherits(FunnelCount, redioactive.Funnel);
+  RED.nodes.registerType("funnelCount", FunnelCount);
 };

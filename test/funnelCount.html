@@ -15,7 +15,7 @@
 -->
 
 <script type="text/javascript">
-  RED.nodes.registerType('funnelGen', {
+  RED.nodes.registerType('funnelCount',{
     category: 'testing',
     color: '#C1C1A6',
     defaults: {
@@ -24,19 +24,18 @@
       start : { value : "0", validate : RED.validators.number() },
       end : { value : "9", validate : RED.validators.number() },
       repeat : { value : false },
-      maxBuffer : { value : 10, validate : RED.validators.number() },
-      wsPort : { value : 0, validate : RED.validators.number() }
+      maxBuffer : { value : 10, validate : RED.validators.number() }
     },
     inputs:0,
     outputs:1,
     icon: "funnel.png",
     label: function() {
-      return this.name || "funnelGen";
+      return this.name ||  "funnelCount";
     }
   });
 </script>
 
-<script type="text/x-red" data-template-name="funnelGen">
+<script type="text/x-red" data-template-name="funnelCount">
   <div class="form-row"><i class="fa fa-sign-in"></i> Count start and end:</div>
   <div class="form-row"><label></label>
     start <input type="text" id="node-input-start" placeholder="0" style="width:100px;"/>
@@ -60,13 +59,8 @@
     <label for="node-input-maxBuffer"><i class="fa fa-suitcase"></i> max buffer</label>
     <input type="text" id="node-input-maxBuffer" placeholder="10">
   </div>
-
-  <div class="form-row">
-    <label for="node-input-wsPort"><i class="fa fa-eye"></i> websock port</label>
-    <input type="text" id="node-input-wsPort" readonly placeholder="0">
-  </div>
 </script>
 
-<script type="text/x-red" data-help-name="funnelGen">
-  <p>Test funnel node with one output that generates a bounded sequence of integers.</p>
+<script type="text/x-red" data-help-name="funnelCount">
+  <p>Test funnel node with one output that uses highland to generate a bounded sequence of integers.</p>
 </script>
