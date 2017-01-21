@@ -3,6 +3,8 @@ machine:
     version: 4.7.2
 
 dependencies:
+  pre:
+    - npm install tape
   post:
     - npm install -g tap-xunit
     - npm install -g node-red
