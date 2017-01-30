@@ -48,7 +48,7 @@ Grain.prototype.uuidToBuffer = function (id) {
       return undefined;
     }
     if (typeof id === 'string') {
-      var b = new Buffer(16);
+      var b = Buffer.allocUnsafe(16);
       uuid.parse(id, b);
       return b;
     }
@@ -70,7 +70,7 @@ Grain.prototype.checkTimestamp = function (t) {
   }
   if (Buffer.isBuffer(t)) {
     if (t.length < 10) {
-      t = Buffer.concat([new Buffer(10-t.length).fill(0), t], 10);
+      t = Buffer.concat([Buffer.alloc(10-t.length, fill(0)), t], 10);
     }
     return t.slice(-10);
   }
@@ -80,7 +80,7 @@ Grain.prototype.checkTimestamp = function (t) {
       console.log("Could not pattern match timestamp '" + t + "'.");
       return undefined;
     }
-    var b = new Buffer(10);
+    var b = Buffer.allocUnsafe(10);
     b.writeUIntBE(+m[1], 0, 6);
     b.writeUInt32BE(+m[2], 6);
     return b;
@@ -108,7 +108,7 @@ Grain.prototype.checkTimecode = function (t) {
   }
   if (Buffer.isBuffer(t)) {
     if (t.length < 8) {
-      t = Buffer.concat([new Buffer(8-t.length).fill(0), t], 8);
+      t = Buffer.concat([Buffer.alloc(8-t.length, fill(0)), t], 8);
     }
     return t.slice(-8);
   }
@@ -130,14 +130,14 @@ Grain.prototype.checkDuration = function (d) {
   if (d === null || d === undefined) return undefined;
   if (Buffer.isBuffer(d)) {
     if (d.length < 8) {
-      d = Buffer.concat([new Buffer(8-t.length).fill(0), d], 8);
+      d = Buffer.concat([Buffer.alloc(8-t.length, 0), d], 8);
     }
     d = d.slice(-8);
     if (d.readUInt32BE(0) === 0) d[3] = 0x01;
     return d;
   }
   if (Array.isArray(d)) {
-    var b = new Buffer(8);
+    var b = Buffer.allocUnsafe(8);
     b.writeUInt32BE(d[0]|0, 0);
     b.writeUInt32BE(d[1]|0, 4);
     return b;
@@ -145,7 +145,7 @@ Grain.prototype.checkDuration = function (d) {
   if (typeof d === 'string') {
     var m = d.match(/^([0-9]+)\/([1-9][0-9]*)$/);
     if (m === null) return undefined;
-    var b = new Buffer(8);
+    var b = Buffer.allocUnsafe(8);
     b.writeUInt32BE(+m[1], 0);
     b.writeUInt32BE(+m[2], 4);
     return b;
