@@ -95,8 +95,8 @@ module.exports = function (RED) {
       grainTime.writeUInt32BE(baseTime[1], 6);
       var grainDuration = srcDuration;
       baseTime[1] = (baseTime[1] +
-        grainDuration[0] * 1000000000 / grainDuration[1]|0);
-      baseTime = [baseTime[0] + baseTime[1] / 1000000000|0, baseTime[1] % 1000000000];
+        grainDuration[0] * 1000000000 / grainDuration[1]|0)>>>0;
+      baseTime = [(baseTime[0] + baseTime[1] / 1000000000|0)>>>0, baseTime[1] % 1000000000];
       return new Grain([b], grainTime, grainTime, null,
         flowId, sourceId, grainDuration);
     }
