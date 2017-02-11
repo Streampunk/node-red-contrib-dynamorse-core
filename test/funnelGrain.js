@@ -1,4 +1,4 @@
-/* Copyright 2016 Streampunk Media Ltd.
+/* Copyright 2017 Streampunk Media Ltd.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ var Grain = require('../model/Grain.js')
 function make420PBuf(width, height) {
   var lumaPitchBytes = width;
   var chromaPitchBytes = lumaPitchBytes / 2;
-  var buf = new Buffer(lumaPitchBytes * height * 3 / 2);  
+  var buf = Buffer.alloc(lumaPitchBytes * height * 3 / 2);
   var lOff = 0;
   var uOff = lumaPitchBytes * height;
   var vOff = uOff + chromaPitchBytes * height / 2;
@@ -32,12 +32,12 @@ function make420PBuf(width, height) {
     for (var x=0; x<width; x+=2) {
       buf[lOff + xlOff++] = 0x10;
       buf[lOff + xlOff++] = 0x10;
-    
+
       if (evenLine) {
-        buf[uOff + xcOff] = 0x80;    
+        buf[uOff + xcOff] = 0x80;
         buf[vOff + xcOff] = 0x80;
         xcOff++;
-      }    
+      }
     }
     lOff += lumaPitchBytes;
     if (!evenLine) {
@@ -62,7 +62,7 @@ function makeVideoTags(width, height, packing, encodingName, interlace) {
 function makeAudioBuf(channels, bitsPerSample, duration) {
   var bytesPerSample = (((bitsPerSample+7)/8)>>>0);
   var samplesPerGrain = 48000 * duration[0] / duration[1];
-  var buf = new Buffer(samplesPerGrain * channels * bytesPerSample);
+  var buf = Buffer.alloc(samplesPerGrain * channels * bytesPerSample);
   for (var i=0; i<samplesPerGrain; ++i)
     for (var c=0; c<channels; ++c)
       buf.writeUIntLE(i, (i*channels + c)*bytesPerSample, bytesPerSample);
@@ -85,12 +85,12 @@ module.exports = function (RED) {
     redioactive.Funnel.call(this, config);
 
     var srcDuration = [ 1, 25 ];
-    var srcBuf = (config.format==='video') ? 
+    var srcBuf = (config.format==='video') ?
       make420PBuf(+config.width, +config.height) :
       makeAudioBuf(+config.channels, +config.bitsPerSample, srcDuration);
 
     function makeGrain(b, baseTime, flowId, sourceId) {
-      var grainTime = new Buffer(10);
+      var grainTime = Buffer.alloc(10);
       grainTime.writeUIntBE(baseTime[0], 0, 6);
       grainTime.writeUInt32BE(baseTime[1], 6);
       var grainDuration = srcDuration;
@@ -119,18 +119,18 @@ module.exports = function (RED) {
     var flow = new ledger.Flow(null, null, localName, localDescription,
       "urn:x-nmos:format:" + tags.format[0], tags, source.id, null);
 
-    this.generator(function (push, next) {
+    this.generator((push, next) => {
       if (this.count < +config.numPushes) {
         if (firstGrain) {
           firstGrain = false;
           nodeAPI.putResource(source, function(err, result) {
             if (err) return node.log(`Unable to register source: ${err}`);
           });
-          nodeAPI.putResource(flow).then(function() {
+          nodeAPI.putResource(flow).then(() => {
             push(null, makeGrain(srcBuf, this.baseTime, flow.id, source.id));
             this.count++;
             setTimeout(next, +config.delay);
-          }.bind(this), function(err) {
+          }, err => {
             if (err) return node.log(`Unable to register flow: ${err}`);
           });
         } else {
@@ -141,7 +141,7 @@ module.exports = function (RED) {
       } else {
         push(null, redioactive.end);
       }
-    }.bind(this));
+    });
     this.on('close', this.close);
   }
 

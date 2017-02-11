@@ -1,4 +1,4 @@
-/* Copyright 2016 Streampunk Media Ltd.
+/* Copyright 2017 Streampunk Media Ltd.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ module.exports = function (RED) {
     RED.nodes.createNode(this, config);
     redioactive.Valve.call(this, config);
     this.count = 0;
-    this.consume(function (err, x, push, next) {
+    this.consume((err, x, push, next) => {
       if (err) {
         push (err);
         next();
@@ -41,7 +41,7 @@ module.exports = function (RED) {
         next();
         this.count++;
       }
-    }.bind(this));
+    });
   }
   RED.nodes.registerType("grain-xray", GrainDebug);
 }

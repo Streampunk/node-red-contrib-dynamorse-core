@@ -1,4 +1,4 @@
-/* Copyright 2016 Streampunk Media Ltd.
+/* Copyright 2017 Streampunk Media Ltd.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 var Timecode = require('../model/Timecode.js');
 var test = require('tape');
 
-var exampleTCNonDrop = new Buffer([0x01, 0x07, 0x04, 0x00, 0x04, 0x09, 0x09, 0x03]);
-var exampleTCDrop = new Buffer([0x01, 0x00, 0x05, 0x00, 0x04, 0x08, 0x0e, 0x04]);
+var exampleTCNonDrop = Buffer.from([0x01, 0x07, 0x04, 0x00, 0x04, 0x09, 0x09, 0x03]);
+var exampleTCDrop = Buffer.from([0x01, 0x00, 0x05, 0x00, 0x04, 0x08, 0x0e, 0x04]);
 
 test('Creating a timecode with a buffer', function (t) {
   var tcnd = new Timecode(exampleTCNonDrop);
@@ -42,5 +42,5 @@ test('Creating a timecode with arguments', function (t) {
   t.equal(tcd.toString(), '10:50:48;24', 'matches drop by string comparison.');
   t.deepEqual(tcnd.buffer, exampleTCNonDrop, 'matches non drop by buffer comparison.');
   t.deepEqual(tcd.buffer, exampleTCDrop, 'matches drop by buffer comparison.');
-  t.end();  
+  t.end();
 });

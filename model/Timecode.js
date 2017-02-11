@@ -1,4 +1,4 @@
-/* Copyright 2016 Streampunk Media Ltd.
+/* Copyright 2017 Streampunk Media Ltd.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ var immutable = require('seamless-immutable');
 function Timecode (bufferHourString, mins, secs, frames, drop, color) {
   if (Buffer.isBuffer(bufferHourString)) {
     if (bufferHourString.length < 8) {
-      this.buffer = Buffer.concat([new Buffer(8-t.length).fill(0), bufferHourString], 8);
+      this.buffer = Buffer.concat([Buffer.alloc(8-t.length), bufferHourString], 8);
     } else {
       this.buffer = bufferHourString.slice(-8);
     }
@@ -43,7 +43,7 @@ function Timecode (bufferHourString, mins, secs, frames, drop, color) {
   drop = (typeof drop !== 'boolean') ? false : drop;
   color = (typeof color !== 'boolean') ? true : color;
 
-  this.buffer = new Buffer([
+  this.buffer = Buffer.from([
     (hours / 10|0) & 0x03, // tens of hours
     (hours % 10|0) & 0x0f, // units of hours
     (mins / 10|0) & 0x07, // tens of mins
@@ -56,7 +56,7 @@ function Timecode (bufferHourString, mins, secs, frames, drop, color) {
 }
 
 Timecode.prototype.toString = function () {
-  function padInt (i) { return (i < 10) ? '0' + i : i; }
+  var padInt = i => (i < 10) ? '0' + i : i;
   var frames = (this.buffer[7] & 0x0f) + (this.buffer[6] & 0x03) * 10|0;
   var secs = (this.buffer[5] & 0x0f) + (this.buffer[4] & 0x07) * 10|0;
   var mins = (this.buffer[3] & 0x0f) + (this.buffer[2] & 0x07) * 10|0;

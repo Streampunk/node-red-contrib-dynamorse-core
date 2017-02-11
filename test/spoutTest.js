@@ -1,4 +1,4 @@
-/* Copyright 2016 Streampunk Media Ltd.
+/* Copyright 2017 Streampunk Media Ltd.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -20,19 +20,19 @@ module.exports = function (RED) {
   function TestSpout (config) {
     RED.nodes.createNode(this, config);
     redioactive.Spout.call(this, config);
-    this.each(function (x, next) {
+    this.each((x, next) => {
       this.log(`Received ${util.inspect(x)}.`);
       if (config.timeout === 0) setImmediate(next);
       else setTimeout(next, config.timeout);
-    }.bind(this));
-    this.errors(function (e, next) {
+    });
+    this.errors((e, next) => {
       this.warn(`Received unhandled error: ${e.message}.`);
       if (config.timeout === 0) setImmediate(next);
       else setTimeout(next, config.timeout);
-    }.bind(this));
-    this.done(function () {
+    });
+    this.done(() => {
       this.log('Thank goodness that is over!');
-    }.bind(this));
+    });
   }
   util.inherits(TestSpout, redioactive.Spout);
   RED.nodes.registerType("spoutTest", TestSpout);

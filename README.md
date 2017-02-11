@@ -250,7 +250,7 @@ Dynamorse will remain open-source. Where links are made to commercial 3rd party 
 
 ## License
 
-This software is released under the Apache 2.0 license. Copyright 2016 Streampunk Media Ltd.
+This software is released under the Apache 2.0 license. Copyright 2017 Streampunk Media Ltd.
 
 Via a dependency on [codecadaon](http://github.com/codecadaon), this software uses libraries from the FFmpeg project under the LGPLv3. See the [codecadon licenses folder](https://github.com/Streampunk/codecadon/tree/master/licenses) for more information.
 

@@ -1,4 +1,4 @@
-/* Copyright 2016 Streampunk Media Ltd.
+/* Copyright 2017 Streampunk Media Ltd.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ var H = require('highland');
 function inlet(config) {
   this.count = +config.start;
 
-  return H(function (push, next) {
+  return H((push, next) => {
     if (this.count <= +config.end) {
       push(null, this.count++);
       setTimeout(next, +config.delay);
@@ -33,7 +33,7 @@ function inlet(config) {
         push(null, redioactive.end);
       }
     }
-  }.bind(this));
+  });
 }
 
 module.exports = function (RED) {

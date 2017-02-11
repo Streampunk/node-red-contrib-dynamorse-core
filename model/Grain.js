@@ -1,4 +1,4 @@
-/* Copyright 2016 Streampunk Media Ltd.
+/* Copyright 2017 Streampunk Media Ltd.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ Grain.prototype.checkBuffers = function (b) {
   if (Buffer.isBuffer(b))
     return [b];
   if (Array.isArray(b)) {
-    b = b.filter(function (x) { return Buffer.isBuffer(x); });
+    b = b.filter(x => Buffer.isBuffer(x));
     return b;
   }
   return undefined;
@@ -169,7 +169,7 @@ Grain.prototype.getDuration = function () {
 Grain.prototype.getPayloadSize = function () {
   if (Array.isArray(this.buffers)) {
     if (this.buffers.length === 1) return this.buffers[0].length;
-    return this.buffers.reduce(function (l, r) { return l + r.length; }, 0);
+    return this.buffers.reduce((l, r) => l + r.length, 0);
   }
   return Buffer.isBuffer(this.buffers) ? this.buffers.length : 0;
 }
@@ -188,7 +188,7 @@ Grain.prototype.toJSON = function () {
   return {
     payloadCount : Array.isArray(this.buffers) ? this.buffers.length : 0,
     payloadSize : Array.isArray(this.buffers) ?
-      this.buffers.reduce(function (l, r) { return l + r.length; }, 0) : 0,
+      this.buffers.reduce((l, r) => l + r.length, 0) : 0,
     ptpSyncTimestamp : this.formatTimestamp(this.ptpSync),
     ptpOriginTimestamp : this.formatTimestamp(this.ptpOrigin),
     timecode : this.formatTimecode(this.timecode),

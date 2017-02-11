@@ -1,4 +1,4 @@
-/* Copyright 2016 Streampunk Media Ltd.
+/* Copyright 2017 Streampunk Media Ltd.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -222,7 +222,7 @@ module.exports = function(RED) {
       var soc = dgram.createSocket('udp4');
       setInterval(function () {
         var usage = process.memoryUsage();
-        var message = new Buffer(`remember,host=${hostname},pid=${pid},type=rss value=${usage.rss}\n` +
+        var message = Buffer.from(`remember,host=${hostname},pid=${pid},type=rss value=${usage.rss}\n` +
           `remember,host=${hostname},pid=${pid},type=heapTotal value=${usage.heapTotal}\n` +
           `remember,host=${hostname},pid=${pid},type=heapUsed value=${usage.heapUsed}`);
         soc.send(message, 0, message.length, 8765, '192.168.99.100');

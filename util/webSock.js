@@ -1,4 +1,4 @@
-/* Copyright 2016 Streampunk Media Ltd.
+/* Copyright 2017 Streampunk Media Ltd.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ var WebSocket = require('ws');
 function webSock(node, port) {
   if (port > 0) {
     this.socket = new WebSocket(`ws://localhost:${port}`);
-    this.socket.on('error', function (error) {
+    this.socket.on('error', error => {
       node.warn(`WebSocket error: ${error}`);
     });
   }
@@ -26,10 +26,7 @@ function webSock(node, port) {
 
 webSock.prototype.open = function(cb) {
   if (this.socket && (this.socket.readyState !== WebSocket.OPEN)) {
-    this.socket.on('open', function open() {
-      cb();
-      return;
-    });
+    this.socket.on('open', cb);
   } else {
     cb();
   }

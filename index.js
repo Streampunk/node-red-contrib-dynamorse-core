@@ -1,4 +1,4 @@
-/* Copyright 2016 Streampunk Media Ltd.
+/* Copyright 2017 Streampunk Media Ltd.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -16,6 +16,5 @@
 module.exports = {
    Redioactive : require('./util/Redioactive.js'),
    Timecode : require('./model/Timecode.js'),
-   Grain : require('./model/Grain.js'),
-   H264 : require('./util/H264.js')
+   Grain : require('./model/Grain.js')
 };
