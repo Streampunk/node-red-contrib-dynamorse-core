@@ -16,7 +16,7 @@
     "nmos-ledger": "^1.0.17"
   },
   "devDependencies": {
-    "dynamorse-test": "^0.1.0"
+    "dynamorse-test": "^0.1.1"
   },
   "scripts": {
     "test": "tape test/*Spec.js",
