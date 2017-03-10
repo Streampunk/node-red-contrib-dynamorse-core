@@ -43,19 +43,18 @@ var setStatus = function (fill, shape, text) {
   }
 }
 
-var ws = null;
-var soc = dgram.createSocket('udp4');
 var nodeCount = 0;
 
-function webSockMsg(node, src) {
+function webSockMsg(node, ws, src) {
   this.node = node;
   this.src = src;
+  this.ws = ws;
 }
 webSockMsg.prototype.send = function(obj) {
   //console.log(`Send: ${this.src}, ${JSON.stringify(obj)}`);
   obj.src = this.src;
-  if (ws)
-    ws.send(this.node, obj);
+  if (this.ws)
+    this.ws.send(this.node, obj);
 }
 
 function safeStatString (s) {
@@ -72,8 +71,10 @@ function Funnel (config) {
   this.setStatus = setStatus.bind(this);
   var workTimes = [];
   var paused = false;
+  var ws = this.context().global.get('ws');
 
-  var soc = dgram.createSocket('udp4');
+  // TODO plumb through logging settings from self
+  var soc = this.context().global.get('soc');
   // console.log('***', util.inspect(this.setStatus, { showHidden: true }));
   node.setStatus('grey', 'ring', 'initialising');
   var maxBuffer = 10;
@@ -89,8 +90,9 @@ function Funnel (config) {
     if (config.wsPort && typeof config.wsPort === 'number' && config.wsPort > 0)
       wsPort = config.wsPort|0;
     ws = new webSock(node, wsPort);
+    this.content().global.set('ws', ws);
   }
-  this.wsMsg = new webSockMsg(node, config.name||"funnel");
+  this.wsMsg = new webSockMsg(node, ws, config.name||"funnel");
 
   var pull = id => {
     node.log(`Pull received with id ${id}, queue length ${queue.length}, pending ${JSON.stringify(pending)}`);
@@ -269,7 +271,18 @@ function Valve (config) {
   var wireCount = config.wires[0].length;
   var pending = config.wires[0];
   var node = this;
-  this.wsMsg = new webSockMsg(node, config.name||"valve");
+  var soc = this.context().global.get('soc');
+  var ws = this.context().global.get('ws');
+  if (!ws) {
+    var wsPort = 0;
+    if (config.wsPort && typeof config.wsPort === 'string')
+      config.wsPort = +config.wsPort;
+    if (config.wsPort && typeof config.wsPort === 'number' && config.wsPort > 0)
+      wsPort = config.wsPort|0;
+    ws = new webSock(node, wsPort);
+    this.content().global.set('ws', ws);
+  }
+  this.wsMsg = new webSockMsg(node, ws, config.name||"valve");
 
   this.nodeStatus = "";
   this.setStatus = setStatus.bind(this);
@@ -424,7 +437,18 @@ function Valve (config) {
 
 function Spout (config) {
   var node = this;
-  this.wsMsg = new webSockMsg(node, config.name||"spout");
+  var soc = this.context().global.get('soc');
+  var ws = this.context().global.get('ws');
+  if (!ws) {
+    var wsPort = 0;
+    if (config.wsPort && typeof config.wsPort === 'string')
+      config.wsPort = +config.wsPort;
+    if (config.wsPort && typeof config.wsPort === 'number' && config.wsPort > 0)
+      wsPort = config.wsPort|0;
+    ws = new webSock(node, wsPort);
+    this.content().global.set('ws', ws);
+  }
+  this.wsMsg = new webSockMsg(node, ws, config.name||"spout");
   var numStreams = config.numStreams||1;
   var numEnds = 0;
 
@@ -504,8 +528,9 @@ function Spout (config) {
   }, 1000);
   this.close = done => {
     node.wsMsg.send({"close": 0});
-    ws.close();
+    if (ws) ws.close();
     ws = null;
+    this.context().global.set('ws', null);
     setTimeout(() => { clearInterval(metrics) }, 2000);
   };
   this.preFlightError = e => {

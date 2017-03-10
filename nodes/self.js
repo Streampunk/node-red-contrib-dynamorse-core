@@ -192,13 +192,19 @@ module.exports = function(RED) {
         `${hostname}`);
       var store = new ledger.NodeRAMStore(node);
       var nodeAPI = new ledger.NodeAPI(+properties.ledgerPort, store);
+      var ws = null;
       nodeAPI.init().start();
+
+      // Send process memory statistics to influxDB every couple of seconds
+      var soc = dgram.createSocket('udp4');
 
       globalContext.set("updated", false);
       globalContext.set("ledger", ledger);
       globalContext.set("node", node);
       globalContext.set("store", store);
       globalContext.set("nodeAPI", nodeAPI);
+      globalContent.set("ws", ws);
+      globalContext.set("soc", soc);
 
       // Externally advertised ... sources etc are registered with discovered registration
       // services
@@ -218,8 +224,6 @@ module.exports = function(RED) {
 
       RED.settings.logging.console.level = properties.logging;
 
-      // Send process memory statistics to influxDB every couple of seconds
-      var soc = dgram.createSocket('udp4');
       setInterval(function () {
         var usage = process.memoryUsage();
         var message = Buffer.from(`remember,host=${hostname},pid=${pid},type=rss value=${usage.rss}\n` +
