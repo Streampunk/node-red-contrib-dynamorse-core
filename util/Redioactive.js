@@ -90,7 +90,7 @@ function Funnel (config) {
     if (config.wsPort && typeof config.wsPort === 'number' && config.wsPort > 0)
       wsPort = config.wsPort|0;
     ws = new webSock(node, wsPort);
-    this.content().global.set('ws', ws);
+    this.context().global.set('ws', ws);
   }
   this.wsMsg = new webSockMsg(node, ws, config.name||"funnel");
 
@@ -280,7 +280,7 @@ function Valve (config) {
     if (config.wsPort && typeof config.wsPort === 'number' && config.wsPort > 0)
       wsPort = config.wsPort|0;
     ws = new webSock(node, wsPort);
-    this.content().global.set('ws', ws);
+    this.context().global.set('ws', ws);
   }
   this.wsMsg = new webSockMsg(node, ws, config.name||"valve");
 
@@ -446,7 +446,7 @@ function Spout (config) {
     if (config.wsPort && typeof config.wsPort === 'number' && config.wsPort > 0)
       wsPort = config.wsPort|0;
     ws = new webSock(node, wsPort);
-    this.content().global.set('ws', ws);
+    this.context().global.set('ws', ws);
   }
   this.wsMsg = new webSockMsg(node, ws, config.name||"spout");
   var numStreams = config.numStreams||1;

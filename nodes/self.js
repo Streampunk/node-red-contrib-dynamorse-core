@@ -203,7 +203,7 @@ module.exports = function(RED) {
       globalContext.set("node", node);
       globalContext.set("store", store);
       globalContext.set("nodeAPI", nodeAPI);
-      globalContent.set("ws", ws);
+      globalContext.set("ws", ws);
       globalContext.set("soc", soc);
 
       // Externally advertised ... sources etc are registered with discovered registration
