@@ -23,7 +23,9 @@
       version : { value : "" },
       nmos_label : { value : "" },
       href : { value : "" },
-      hostname : { value : "" }
+      hostname : { value : "" },
+      logHostname : { value : "192.168.99.100" },
+      logPort : { value : 8765, validate : RED.validators.number() }
     },
     label: function() {
       return (this.nmos_label) ? this.nmos_label : "self";
@@ -54,5 +56,13 @@
   <div class="form-row">
       <label for="node-config-input-hostname"><i class="fa fa-desktop"></i> hostname</label>
       <input type="text" id="node-config-input-hostname"></input>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-logHostname"><i class="fa fa-address-card-o"></i> log host</label>
+      <input type="text" id="node-config-input-logHostname" placeholder="192.168.99.100"></input>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-logPort"><i class="fa fa-ellipsis-v"></i> log port</label>
+      <input type="number" id="node-config-input-logPort" placeholder="8765"></input>
   </div>
 </script>

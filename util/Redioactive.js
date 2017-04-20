@@ -71,10 +71,9 @@ function Funnel (config) {
   this.setStatus = setStatus.bind(this);
   var workTimes = [];
   var paused = false;
+  var logger = this.context().global.get('logger');
   var ws = this.context().global.get('ws');
 
-  // TODO plumb through logging settings from self
-  var soc = this.context().global.get('soc');
   // console.log('***', util.inspect(this.setStatus, { showHidden: true }));
   node.setStatus('grey', 'ring', 'initialising');
   var maxBuffer = 10;
@@ -103,7 +102,7 @@ function Funnel (config) {
       if (!isEnd(payload))
         node.wsMsg.send({"pull": payload});
       var message = Buffer.from(`punkd value=${payload}`)
-      soc.send(message, 0, message.length, 8765, influx);
+      logger.send(message);
       if (isEnd(payload)) {
         work = () => { }
         next = () => {
@@ -155,7 +154,7 @@ function Funnel (config) {
           node.wsMsg.send({"send": payload});
         pending = [];
         var message = Buffer.from(`punkd value=${payload}`)
-        soc.send(message, 0, message.length, 8765, influx);
+        logger.send(message);
         if (isEnd(payload)) {
           work = () => { }
           next = () => {
@@ -255,7 +254,8 @@ function Funnel (config) {
       `nodeWorkAvg,host=${hostname},pid=${pid},redioType=funnel,nodeType=${nodeType},nodeName=${configName},nodeID=${node.id} value=${average}\n` +
       `bufferLength,host=${hostname},pid=${pid},redioType=funnel,nodeType=${nodeType},nodeName=${configName},nodeID=${node.id} value=${queue.length}`);
     // console.log('Sending stats', message.toString());
-    soc.send(message, 0, message.length, 8765, influx);
+    logger.send(message);
+    // this.context().global.get('logger').send(message);
   }, 1000);
   this.close = done => { // done is undefined :-(
     node.setStatus('yellow', 'ring', 'closing');
@@ -271,7 +271,7 @@ function Valve (config) {
   var wireCount = config.wires[0].length;
   var pending = config.wires[0];
   var node = this;
-  var soc = this.context().global.get('soc');
+  var logger = this.context().global.get('logger');
   var ws = this.context().global.get('ws');
   if (!ws) {
     var wsPort = 0;
@@ -424,7 +424,7 @@ function Valve (config) {
       `nodeWorkAvg,host=${hostname},pid=${pid},redioType=valve,nodeType=${nodeType},nodeName=${configName},nodeID=${node.id} value=${average}\n` +
       `bufferLength,host=${hostname},pid=${pid},redioType=valve,nodeType=${nodeType},nodeName=${configName},nodeID=${node.id} value=${queue.length}\n`);
       // console.log('Sending stats', message.toString());
-    soc.send(message, 0, message.length, 8765, influx);
+    logger.send(message);
   }, 1000);
   this.close = done => { // done is undefined :-(
     node.setStatus('yellow', 'ring', 'closing');
@@ -437,7 +437,7 @@ function Valve (config) {
 
 function Spout (config) {
   var node = this;
-  var soc = this.context().global.get('soc');
+  var logger = this.context().global.get('logger');
   var ws = this.context().global.get('ws');
   if (!ws) {
     var wsPort = 0;
@@ -524,7 +524,7 @@ function Spout (config) {
       `grainFlow,host=${hostname},pid=${pid},redioType=spout,nodeType=${nodeType},nodeName=${configName},nodeID=${node.id} value=${measuredTimes.length}\n` +
       `nodeWorkAvg,host=${hostname},pid=${pid},redioType=spout,nodeType=${nodeType},nodeName=${configName},nodeID=${node.id} value=${average}`);
       // console.log('Sending stats', message.toString());
-    soc.send(message, 0, message.length, 8765, influx);
+    logger.send(message);
   }, 1000);
   this.close = done => {
     node.wsMsg.send({"close": 0});

@@ -23,7 +23,9 @@ var pid = process.pid;
 var properties = {
   redPort : 1880,
   ledgerPort : 3101,
-  logging : 'trace'
+  logging : 'trace',
+  logHostname : '192.168.99.100',
+  logPort : 8765
 };
 
 // Fixed identifiers for global config nodes
@@ -99,6 +101,8 @@ function setupGlobalFlow() {
               "nmos_label": "${self.label}",
               "href": "${self.href}",
               "hostname": "${self.hostname}",
+              "logHostname": "${properties.logHostname}",
+              "logPort": ${properties.logPort},
               "ledgerPort": "${properties.ledgerPort}",
               "logging": "${properties.logging}"
             },
@@ -181,7 +185,30 @@ function setupGlobalFlow() {
   });
 }
 
+function Logger(hostname, port) {
+  this.hostname = hostname;
+  this.port = port;
+  this.soc = dgram.createSocket('udp4');
+  this.active = true;
+  console.log(`Created logger: hostname '${this.hostname}', port ${this.port}`);
+
+  this.close = function() { 
+    this.active = false; 
+    this.soc.close(); 
+  }
+  
+  this.send = function(msg) {
+    if (!Buffer.isBuffer(msg)) {
+      console.log("logger.send requires a valid message buffer");
+      return;
+    } else if (this.active) {
+      this.soc.send(msg, 0, msg.length, this.port, this.hostname);
+    }
+  }
+}
+
 module.exports = function(RED) {
+  var logger = null;
   function Self (config) {
     RED.nodes.createNode(this, config);
 
@@ -192,19 +219,17 @@ module.exports = function(RED) {
         `${hostname}`);
       var store = new ledger.NodeRAMStore(node);
       var nodeAPI = new ledger.NodeAPI(+properties.ledgerPort, store);
+      logger = new Logger(config.logHostname, +config.logPort);
       var ws = null;
       nodeAPI.init().start();
-
-      // Send process memory statistics to influxDB every couple of seconds
-      var soc = dgram.createSocket('udp4');
 
       globalContext.set("updated", false);
       globalContext.set("ledger", ledger);
       globalContext.set("node", node);
       globalContext.set("store", store);
       globalContext.set("nodeAPI", nodeAPI);
+      globalContext.set("logger", logger);
       globalContext.set("ws", ws);
-      globalContext.set("soc", soc);
 
       // Externally advertised ... sources etc are registered with discovered registration
       // services
@@ -223,14 +248,18 @@ module.exports = function(RED) {
       checkConfigNodes(setupGlobalFlow);
 
       RED.settings.logging.console.level = properties.logging;
-
       setInterval(function () {
         var usage = process.memoryUsage();
         var message = Buffer.from(`remember,host=${hostname},pid=${pid},type=rss value=${usage.rss}\n` +
           `remember,host=${hostname},pid=${pid},type=heapTotal value=${usage.heapTotal}\n` +
           `remember,host=${hostname},pid=${pid},type=heapUsed value=${usage.heapUsed}`);
-        soc.send(message, 0, message.length, 8765, '192.168.99.100');
-      }, 2000);
+        globalContext.get('logger').send(message);
+      }.bind(this), 2000);
+    } else {
+      // re-deploy
+      logger.close();
+      logger = new Logger(config.logHostname, +config.logPort);
+      globalContext.set("logger", logger);
     }
   }
   RED.nodes.registerType("self", Self);
