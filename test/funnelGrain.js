@@ -55,6 +55,7 @@ function makeVideoTags(width, height, packing, encodingName, interlace) {
   tags["height"] = [ `${height}` ];
   tags["packing"] = [ packing ];
   tags["encodingName"] = [ encodingName ];
+  tags["colorimetry"] = [ "BT709-2" ];
   tags["interlace"] = [ `${interlace}` ];
   return tags;
 }
