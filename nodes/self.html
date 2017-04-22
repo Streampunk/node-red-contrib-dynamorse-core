@@ -25,7 +25,8 @@
       href : { value : "" },
       hostname : { value : "" },
       logHostname : { value : "192.168.99.100" },
-      logPort : { value : 8765, validate : RED.validators.number() }
+      logPort : { value : 8765, validate : RED.validators.number() },
+      ledgerPort : { value : 3101, validate : RED.validators.number() }
     },
     label: function() {
       return (this.nmos_label) ? this.nmos_label : "self";
@@ -64,5 +65,9 @@
   <div class="form-row">
       <label for="node-config-input-logPort"><i class="fa fa-ellipsis-v"></i> log port</label>
       <input type="number" id="node-config-input-logPort" placeholder="8765"></input>
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-ledgerPort"><i class="fa fa-ellipsis-v"></i> ledger port</label>
+      <input type="number" id="node-config-input-ledgerPort" placeholder="3101"></input>
   </div>
 </script>

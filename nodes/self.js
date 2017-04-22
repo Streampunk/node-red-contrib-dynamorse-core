@@ -23,7 +23,6 @@ var pid = process.pid;
 var properties = {
   redPort : 1880,
   ledgerPort : 3101,
-  logging : 'trace',
   logHostname : '192.168.99.100',
   logPort : 8765
 };
@@ -103,8 +102,7 @@ function setupGlobalFlow() {
               "hostname": "${self.hostname}",
               "logHostname": "${properties.logHostname}",
               "logPort": ${properties.logPort},
-              "ledgerPort": "${properties.ledgerPort}",
-              "logging": "${properties.logging}"
+              "ledgerPort": "${properties.ledgerPort}"
             },
             {
               "id": "${deviceNodeID}",
@@ -209,18 +207,21 @@ function Logger(hostname, port) {
 
 module.exports = function(RED) {
   var logger = null;
+  var logTimer = null;
   function Self (config) {
     RED.nodes.createNode(this, config);
 
     var globalContext = RED.settings.functionGlobalContext;
-    if (!globalContext.get("ledger")) {
-      var node = new ledger.Node(null, null, `Dynamorse ${shortHostname} ${pid}`,
-        `http://dynamorse-${shortHostname}-${pid}.local:${properties.ledgerPort}`,
-        `${hostname}`);
+    properties.ledgerPort = +config.ledgerPort || 3101;
+    var startLedger = !globalContext.get("ledger");
+    if (startLedger) {
+      var label = config.label || `Dynamorse ${shortHostname} ${pid}`;
+      var href = config.href || `http://dynamorse-${shortHostname}-${pid}.local:${properties.ledgerPort}`;
+      var host = config.hostname || `${hostname}`;
+
+      var node = new ledger.Node(null, null, label, href, host);
       var store = new ledger.NodeRAMStore(node);
       var nodeAPI = new ledger.NodeAPI(+properties.ledgerPort, store);
-      logger = new Logger(config.logHostname, +config.logPort);
-      var ws = null;
       nodeAPI.init().start();
 
       globalContext.set("updated", false);
@@ -228,8 +229,6 @@ module.exports = function(RED) {
       globalContext.set("node", node);
       globalContext.set("store", store);
       globalContext.set("nodeAPI", nodeAPI);
-      globalContext.set("logger", logger);
-      globalContext.set("ws", ws);
 
       // Externally advertised ... sources etc are registered with discovered registration
       // services
@@ -244,20 +243,32 @@ module.exports = function(RED) {
 
       nodeAPI.putResource(device).catch(RED.log.error);
       nodeAPI.putResource(pipelines).catch(RED.log.error);
+    }
 
+    var isInit = !config.nmos_id;
+    if (startLedger || isInit) {
+      var ws = null;
+      globalContext.set("ws", ws);
+
+      properties.redPort = RED.settings.uiPort;
       checkConfigNodes(setupGlobalFlow);
-
-      RED.settings.logging.console.level = properties.logging;
-      setInterval(function () {
+    
+      clearInterval(logTimer);
+      logTimer = setInterval(function () {
         var usage = process.memoryUsage();
         var message = Buffer.from(`remember,host=${hostname},pid=${pid},type=rss value=${usage.rss}\n` +
           `remember,host=${hostname},pid=${pid},type=heapTotal value=${usage.heapTotal}\n` +
           `remember,host=${hostname},pid=${pid},type=heapUsed value=${usage.heapUsed}`);
-        globalContext.get('logger').send(message);
-      }.bind(this), 2000);
-    } else {
-      // re-deploy
-      logger.close();
+        if (logger)
+          logger.send(message);
+      }, 2000);
+    }
+
+    var logHostname = logger?logger.hostname:null;
+    var logPort = logger?logger.port:0;
+    if (config.logHostname && +config.logPort && ((config.logHostname !== logHostname) || (+config.logPort !== logPort))) {
+      if (logger)
+        logger.close();
       logger = new Logger(config.logHostname, +config.logPort);
       globalContext.set("logger", logger);
     }
