@@ -23,7 +23,6 @@ var webSock = require('./webSock.js').webSock;
 
 var hostname = require('os').hostname();
 var pid = process.pid;
-var influx = '192.168.99.100';
 
 function End() { }
 
@@ -101,8 +100,7 @@ function Funnel (config) {
       var payload = queue.shift();
       if (!isEnd(payload))
         node.wsMsg.send({"pull": payload});
-      var message = Buffer.from(`punkd value=${payload}`)
-      logger.send(message);
+      logger.send({ punkd: payload });
       if (isEnd(payload)) {
         work = () => { }
         next = () => {
@@ -153,8 +151,7 @@ function Funnel (config) {
         else
           node.wsMsg.send({"send": payload});
         pending = [];
-        var message = Buffer.from(`punkd value=${payload}`)
-        logger.send(message);
+        logger.send({ punkd: payload });
         if (isEnd(payload)) {
           work = () => { }
           next = () => {
@@ -247,15 +244,22 @@ function Funnel (config) {
     var measuredTimes = workTimes;
     workTimes = [];
     var sum = measuredTimes.reduce((prev, curr) =>
-        prev + curr[0] * 1000000000 + curr[1], 0);
+      prev + curr[0] * 1000000000 + curr[1], 0);
     var average = (measuredTimes.length === 0) ? 0 : sum / measuredTimes.length|0;
-    var message = Buffer.from(
-      `grainFlow,host=${hostname},pid=${pid},redioType=funnel,nodeType=${nodeType},nodeName=${configName},nodeID=${node.id} value=${measuredTimes.length}\n` +
-      `nodeWorkAvg,host=${hostname},pid=${pid},redioType=funnel,nodeType=${nodeType},nodeName=${configName},nodeID=${node.id} value=${average}\n` +
-      `bufferLength,host=${hostname},pid=${pid},redioType=funnel,nodeType=${nodeType},nodeName=${configName},nodeID=${node.id} value=${queue.length}`);
-    // console.log('Sending stats', message.toString());
-    logger.send(message);
-    // this.context().global.get('logger').send(message);
+    var msgObj = {
+      redioactive: {
+        host: hostname,
+        pid: pid,
+        redioType: "funnel",
+        nodeType: nodeType,
+        nodeName: configName,
+        nodeID: node.id,
+        grainFlow: measuredTimes.length,
+        nodeWorkAvg: average,
+        bufferLength: queue.length
+      }
+    };
+    logger.send(msgObj);
   }, 1000);
   this.close = done => { // done is undefined :-(
     node.setStatus('yellow', 'ring', 'closing');
@@ -419,12 +423,20 @@ function Valve (config) {
     var sum = measuredTimes.reduce((prev, curr) =>
       prev + curr[0] * 1000000000 + curr[1], 0);
     var average = (measuredTimes.length === 0) ? 0 : sum / measuredTimes.length|0;
-    var message = Buffer.from(
-      `grainFlow,host=${hostname},pid=${pid},redioType=valve,nodeType=${nodeType},nodeName=${configName},nodeID=${node.id} value=${measuredTimes.length}\n` +
-      `nodeWorkAvg,host=${hostname},pid=${pid},redioType=valve,nodeType=${nodeType},nodeName=${configName},nodeID=${node.id} value=${average}\n` +
-      `bufferLength,host=${hostname},pid=${pid},redioType=valve,nodeType=${nodeType},nodeName=${configName},nodeID=${node.id} value=${queue.length}\n`);
-      // console.log('Sending stats', message.toString());
-    logger.send(message);
+    var msgObj = {
+      redioactive: {
+        host: hostname,
+        pid: pid,
+        redioType: "valve",
+        nodeType: nodeType,
+        nodeName: configName,
+        nodeID: node.id,
+        grainFlow: measuredTimes.length,
+        nodeWorkAvg: average,
+        bufferLength: queue.length
+      }
+    };
+    logger.send(msgObj);
   }, 1000);
   this.close = done => { // done is undefined :-(
     node.setStatus('yellow', 'ring', 'closing');
@@ -518,13 +530,21 @@ function Spout (config) {
     var measuredTimes = workTimes;
     workTimes = [];
     var sum = measuredTimes.reduce((prev, curr) =>
-        prev + curr[0] * 1000000000 + curr[1], 0);
+      prev + curr[0] * 1000000000 + curr[1], 0);
     var average = (measuredTimes.length === 0) ? 0 : sum / measuredTimes.length|0;
-    var message = Buffer.from(
-      `grainFlow,host=${hostname},pid=${pid},redioType=spout,nodeType=${nodeType},nodeName=${configName},nodeID=${node.id} value=${measuredTimes.length}\n` +
-      `nodeWorkAvg,host=${hostname},pid=${pid},redioType=spout,nodeType=${nodeType},nodeName=${configName},nodeID=${node.id} value=${average}`);
-      // console.log('Sending stats', message.toString());
-    logger.send(message);
+    var msgObj = {
+      redioactive: {
+        host: hostname,
+        pid: pid,
+        redioType: "spout",
+        nodeType: nodeType,
+        nodeName: configName,
+        nodeID: node.id,
+        grainFlow: measuredTimes.length,
+        nodeWorkAvg: average
+      }
+    };
+    logger.send(msgObj);
   }, 1000);
   this.close = done => {
     node.wsMsg.send({"close": 0});

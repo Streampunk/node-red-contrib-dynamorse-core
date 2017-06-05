@@ -15,16 +15,16 @@
 
 var http = require('http');
 var ledger = require('nmos-ledger');
-var dgram = require('dgram');
 var hostname = require('os').hostname();
 var shortHostname = hostname.match(/([^\.]*)\.?.*/)[1];
 var pid = process.pid;
 
-var properties = {
+var properties = {};
+var defaultProps = {
   redPort : 1880,
   ledgerPort : 3101,
-  logHostname : '192.168.99.100',
-  logPort : 8765
+  logHostname : '127.0.0.1',
+  logPort : 0
 };
 
 // Fixed identifiers for global config nodes
@@ -183,24 +183,55 @@ function setupGlobalFlow() {
   });
 }
 
+function httpReq(method, host, port, path, payload) {
+  return new Promise((resolve, reject) => {
+    var req = http.request({
+      host: host,
+      port : port,
+      path : path,
+      method : method,
+      headers : {
+        'Content-Type' : 'application/json',
+        'Content-Length' : payload.length
+      }
+    }, (res) => {
+      var statusCode = res.statusCode;
+      var contentType = res.headers['content-type'];
+
+      if (!((200 === statusCode) || (204 == statusCode)))
+        reject(`http '${method}' request to path '${host}${path}' failed with status ${statusCode}`);
+
+      res.setEncoding('utf8');
+      var rawData = "";
+      res.on('data', (chunk) => rawData += chunk);
+      res.on('end', () => {
+        resolve(rawData);
+      })
+    }).on("error", (e) => {
+      reject(`problem with '${method}' request to path '${host}${path}': ${e.message}`);
+    });
+
+    req.write(payload);
+    req.end();
+  });
+}
+
 function Logger(hostname, port) {
   this.hostname = hostname;
   this.port = port;
-  this.soc = dgram.createSocket('udp4');
   this.active = true;
   console.log(`Created logger: hostname '${this.hostname}', port ${this.port}`);
 
   this.close = function() { 
     this.active = false; 
-    this.soc.close(); 
   }
   
-  this.send = function(msg) {
-    if (!Buffer.isBuffer(msg)) {
-      console.log("logger.send requires a valid message buffer");
-      return;
-    } else if (this.active) {
-      this.soc.send(msg, 0, msg.length, this.port, this.hostname);
+  this.send = function(msgObj) {
+    if (this.active && this.port) {
+      httpReq('PUT', this.hostname, this.port, '/redioactive', JSON.stringify(msgObj))
+      .catch(err => {
+        console.error(err);
+      });
     }
   }
 }
@@ -211,8 +242,12 @@ module.exports = function(RED) {
   function Self (config) {
     RED.nodes.createNode(this, config);
 
+    properties.redPort = process.env.RED_PORT || defaultProps.redPort;
+    properties.ledgerPort = process.env.LEDGER_PORT || defaultProps.ledgerPort;
+    properties.logHostname = process.env.LOG_HOSTNAME || defaultProps.logHostname;
+    properties.logPort = process.env.LOG_PORT || defaultProps.logPort;
+
     var globalContext = RED.settings.functionGlobalContext;
-    properties.ledgerPort = +config.ledgerPort || 3101;
     var startLedger = !globalContext.get("ledger");
     if (startLedger) {
       var label = config.label || `Dynamorse ${shortHostname} ${pid}`;
@@ -250,26 +285,28 @@ module.exports = function(RED) {
       var ws = null;
       globalContext.set("ws", ws);
 
-      properties.redPort = RED.settings.uiPort;
+      properties.redPort = RED.settings.uiPort; // !!! TODO: Need to update settings.js to alter this !!!
       checkConfigNodes(setupGlobalFlow);
     
       clearInterval(logTimer);
       logTimer = setInterval(function () {
         var usage = process.memoryUsage();
-        var message = Buffer.from(`remember,host=${hostname},pid=${pid},type=rss value=${usage.rss}\n` +
-          `remember,host=${hostname},pid=${pid},type=heapTotal value=${usage.heapTotal}\n` +
-          `remember,host=${hostname},pid=${pid},type=heapUsed value=${usage.heapUsed}`);
+        var msgObj = {
+          nodeJS: {
+            host: hostname,
+            pid: pid,
+            rss: usage.rss,
+            heapTotal: usage.heapTotal,
+            heapUsed: usage.heapUsed
+          }
+        };
         if (logger)
-          logger.send(message);
+          logger.send(msgObj);
       }, 2000);
     }
 
-    var logHostname = logger?logger.hostname:null;
-    var logPort = logger?logger.port:0;
-    if (config.logHostname && +config.logPort && ((config.logHostname !== logHostname) || (+config.logPort !== logPort))) {
-      if (logger)
-        logger.close();
-      logger = new Logger(config.logHostname, +config.logPort);
+    if (!logger) {
+      logger = new Logger(properties.logHostname, +properties.logPort);
       globalContext.set("logger", logger);
     }
   }

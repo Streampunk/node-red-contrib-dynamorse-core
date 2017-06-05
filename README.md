@@ -128,6 +128,10 @@ Run Node-red:
 
 Connect to the user interface via a web browser. By default, the UI runs on port `1880`, so use [http://localhost:1880](http://localhost:1880).
 
+There are two environment variables to set that control the sending of JSON logging information to a package such as logstash:
+* LOG_HOSTNAME - default: 127.0.0.1
+* LOG_PORT - default: 0 (disabled)
+
 This package can be installed from the 'manage palette' option in the Node-RED menu. Alternatively in your Node-RED user directory, typically ~/.node-red, run
 
     npm install node-red-contrib-dynamorse-core
