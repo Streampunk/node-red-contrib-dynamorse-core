@@ -230,7 +230,7 @@ function Funnel (config) {
     node.setStatus('green', 'dot', 'generating');
   }
   this.preFlightError = (e) => {
-    node.error(`Preflight error: ${e.message}.`);
+    node.error(`Preflight error: ${(e.message) ? e.message : e}.`);
     push(e);
     node.setStatus('red', 'ring', 'preflight fail');
     next = () => {
@@ -554,7 +554,7 @@ function Spout (config) {
     setTimeout(() => { clearInterval(metrics) }, 2000);
   };
   this.preFlightError = e => {
-    node.error(`Preflight error: ${e.message}.`);
+    node.error(`Preflight error: ${(e.message) ? e.message : e}.`);
     node.setStatus('red', 'ring', 'preflight fail');
     next = () => {
       node.setStatus('red', 'ring', 'preflight fail');
