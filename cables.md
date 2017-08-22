@@ -92,7 +92,54 @@ This is a lower priority than other logical connection group features.
 
 # Design
 
+## Changes to redioactive
 
+* Redioactive gets a logical connection group _database_ (Javascript object). The database is exposed through a simple REST API.
+* Funnels and valves can synchronously register each of the logical connection group they crate in the database.
+* Valves and spouts can synchronously look up groups when initialising by flow identifier and Node-RED wire number and/or node instance identifier (tbd).
+* Communication with ledger becomes an optional feature that can be switched on and off, towards a plug in design that could work with different discovery & registration systems or different versions of the same specification.
+
+## Changes to most nodes
+
+* Streampunk nodes will have direct access to the redioactive database via prototype method calls provided as all such nodes extend a redioactive node. No need to reference via the global context. Methods will support a JSON structure for expressing a logical connection group and the flows that it contains.
+* Format tags can be expressed in a simpler format that is not coupled to the NMOS v1.0 tags format, meaning that values can be typed ... no need to covert numbers to strings ... and are no longer embedded in arrays. As an example:
+
+  ```Javascript
+var tags = {
+  format : [ 'video' ],
+  encodingName : [ 'raw' ],
+  width : [ '1920' ],
+  height : [ `1080` ],
+  depth : [ `10` ],
+  packing : [ 'v210' ],
+  sampling : [ 'YCbCr-4:2:2' ],
+  clockRate : [ '90000' ],
+  interlace : [ '1' ],
+  colorimetry : [ 'BT709-2' ],
+  grainDuration : [ '1/25']
+};
+  ```
+
+  ... become ...
+
+  ```Javascript
+var tags = {
+  format : 'video',
+  encodingName : 'raw',
+  width : 1920,
+  height : 1080,
+  depth : 10,
+  packing : 'v210',
+  sampling : 'YCbCr-4:2:2',
+  clockRate : 90000,
+  interlace : true,
+  colorimetry : 'BT709-2',
+  grainDuration : '1/25'
+};
+  ```
+
+  This should greatly simplify the code managing tags and reduce easy-to-make mistakes when parsing tag properties. The range and names of tags becomes an internal issue for dynamorse, with registered MIME types will be followed wherever possible. Most aspects of flow and source creation, including default naming and identity management, can be pushed up into redioactive.
+* Ledger no longer has to be required in each node and the global context does not have to be checked. Some work will have to be done to ensure that the database is propagated in an appropriate order.
 
 # Original Basecamp post
 
