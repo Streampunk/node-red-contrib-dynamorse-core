@@ -1,10 +1,17 @@
 # Refactor for logical cables
 
+## The problem
+
 In the current dynamorse model, one Node-RED _wire_ equates to one Node-RED flow, meaning that wiring up multiple video, audio and ancillary outputs from a single source to a single destination is cumbersome and time consuming. Although this is a good match to the theoretical data model for elementary flows of grains, it is not the most user friendly way of connecting devices in an IoT-style. Ideally, you could connect an SDI-In node via a single Node-RED _cable_ to a SDI-Out node and transport all the flows that the SDI-In node generates. Further use cases of using _cables_, a form of _logical connection group_, are listed below.
 
-At the moment, a tight coupling exists between the ledger implementation of registration and discovery and each node. While considering the ability to carry multiple flows per cable, this is also an opportunity to decouple ledger from each node. Ledger is used as the means for a destination to discover the format of the grains it is receiving, but recent brittle changes in the NMOS specifications have illustrated that this is a bad design. A better approach would be for dynamorse to have its own internal model of flows, sources, cables etc..
+At the moment, a tight coupling exists between the ledger implementation of registration and discovery and each node. While considering the ability to carry multiple flows per cable, this is also an opportunity to decouple ledger from each node. Ledger is used as the means for a destination to discover the format of the grains it is receiving, but recent brittle changes in the NMOS specifications have illustrated that this is a bad design. A better approach would be for dynamorse to have its own internal model of flows, sources, cables etc., separating it from any specific external registration and discovery system.
 
 A lot of code has been cut and pasted into each Node-RED node to manage the current mechanism and much of this is unnecessarily asynchronous.
+
+## The proposal
+
+1. All wires in Node-RED between nodes change from a single flow-of-grains to a _logical connection group_ containing one of more flows-of-grains.
+2. Nodes register themselves with an internal _database_ of node instances, describing any logical connection groups that they create. Valves and funnels can query this database to find out information, such as picture coding and dimensions, they need to further process the input flows.
 
 # Use cases
 
@@ -50,10 +57,24 @@ Logical connection groups need to be joined, split, remapped and filtered so tha
 
 ### Splice
 
+Takes two or more input logical connection groups and splices their flows together into one output logical connection group. A mechanism will be required to determine the following:
+
+- Of the inputs, which should become the primary flow for back pressure on the output?
+- What is the ordering of the flows in the output group?
+
 ### Sever
+
+Takes a single logical connection group input a filters out certain flows on the output. The following will need to be determined:
+
+- If the primary back pressure flow is filtered out, what is the new primary back pressure flow of the output and how is it mapped back to the input?
+- what if the given filter results in a logical connection group with no flows?
 
 ### Braid
 
+Takes a single logical connection group on the input and creates a new logical connection group on the output containing the same flows but reordered. Issues to consider include:
+
+- How does back pressure map back along the chain if the primary back pressure flow is reassigned?
+- How is the mapping specified without a complex user interface?
 
 ## Carriage over transports
 
@@ -68,6 +89,10 @@ A similar mapping for RTP with header extensions could be considered, although i
 A _logical connection group_ is not limited to unidirectional transport of flows. A reverse channel, such as a talkback connection to a cameraman that runs in the same group as the video and audio but in the opposite direction is also possible. A maximum return path delay between the source and destination may be specified to indicate the maximum tolerable delay on the line.
 
 This is a lower priority than other logical connection group features.
+
+# Design
+
+
 
 # Original Basecamp post
 
