@@ -62,14 +62,14 @@ Takes two or more input cables and splices their flows together into one output 
 - Of the input flows, which should become the primary flow for back pressure on the output?
 - What is the ordering of the flows in the output group?
 
-### Sever
+### Cleave
 
 Takes a single cable input and filters out certain flows from the output. The following will need to be determined:
 
 - If the primary back pressure flow is filtered out, what is the new primary back pressure flow of the output and how is it mapped back to the input?
 - what if the given filter results in a cable with no flows?
 
-To split a cable into two sets of independent flows as separate cables, use the cable as an input to two separate sever, each set up to filter out distinct flows. For example, if the outputs of two cameras are spliced together into a single cable for transport, they can be split out into two separate camera feeds to be fed into a monitor. The combined cable is fed into two sever nodes, the first selecting the video and audio outputs from the first camera, and the second the outputs of the second camera.
+To split a cable into two sets of independent flows as separate cables, use the cable as an input to two separate cleave nodes, each set up to filter out distinct flows. For example, if the outputs of two cameras are spliced together into a single cable for transport, they can be split out into two separate camera feeds to be fed into a monitor. The combined cable is fed into both cleave nodes, the first selecting the video and audio outputs from the first camera, and the second the outputs of the second camera.
 
 ### Braid
 
