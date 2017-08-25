@@ -20,6 +20,9 @@ module.exports = function (RED) {
   function TestSpout (config) {
     RED.nodes.createNode(this, config);
     redioactive.Spout.call(this, config);
+    this.findCable().then(c => {
+      this.log(`Details of input cable 1 are ${c}`);
+    }, e => { this.warn(e); });
     this.each((x, next) => {
       this.log(`Received ${util.inspect(x)}.`);
       if (config.timeout === 0) setImmediate(next);

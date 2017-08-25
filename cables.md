@@ -102,7 +102,29 @@ This is a lower priority than other cable features and no dynaorse nodes yet sup
 * Valves and spouts can synchronously look up groups when initialising by flow identifier and Node-RED wire number and/or node instance identifier (tbd).
 * Communication with ledger becomes an optional feature that can be switched on and off, towards a plug in design that could work with different discovery & registration systems or different versions of the same specification.
 
-## Changes to most nodes
+## Cable data structure
+
+The proposed data structure for a cable is illustrated below:
+
+```Javascript
+var cable = {
+  video: [ { name: "hbr", tags: { /* tags for first video stream */}, source: "one" },
+           { name: "lbr", tags: { /* tags for second video stream */ } }, source: "one" ],
+  audio: [ tags: { /* tags for the first unnamed audio stream */ } },
+           { name: "french", tags: { /* tags for the second audio stream */ } },
+           { name: "talkback", tags: { /* tags for a talkback stream */ }, reverse: true } ]
+  anc: [ { name: "subtitles", tags: { /* tags for ancllary data */ } } ],
+  event: [ /* Other kinds of streams, such as event or logging streams that may not have a fixed cadence. */ ],
+  backPressure: "video[0]" // must be explicit stream type and array reference
+};
+```
+
+Names are indicative and optional only and will implicitly default to the stream type and array reference if not provided,
+e.g. audio[0]. After splicing, more than one stream may end up with the same name and valve and spout code should use stream type and index for explicit referencing within cables.
+
+Before insertion into the database, each flow will have a unique UUID identifier created and a unique source UUID identifier. This is unless the optional source reference is specified, enabling the user to specify that two or more streams are from the same source.
+
+## Changes to almost all dynamorse nodes
 
 * Streampunk nodes will have direct access to the redioactive database via prototype method calls provided as all such nodes extend a redioactive node. No need to reference via the global context. Methods will support a JSON structure for expressing a cable and the flows that it contains.
 * Format tags can be expressed in a simpler format that is not coupled to the NMOS v1.0 tags format, meaning that values can be typed ... no need to covert numbers to strings ... and are no longer embedded in single-value arrays. As an example:
@@ -119,7 +141,7 @@ var tags = {
   clockRate : [ '90000' ],
   interlace : [ '1' ],
   colorimetry : [ 'BT709-2' ],
-  grainDuration : [ '1/25']
+  grainDuration : [ '1/25' ]
 };
 ```
 
@@ -137,12 +159,14 @@ var tags = {
   clockRate : 90000,
   interlace : true,
   colorimetry : 'BT709-2',
-  grainDuration : '1/25'
+  grainDuration : [1, 25]
 };
 ```
 
   This should greatly simplify the code managing tags and reduce easy-to-make mistakes when parsing tag properties. The range and names of tags becomes an internal issue for dynamorse, with registered MIME types will be followed wherever possible. Most aspects of flow and source creation, including default naming and identity management, can be pushed up into redioactive.
-* Ledger no longer has to be required in each node and the global context does not have to be checked. Some work will have to be done to ensure that the database is propagated in an appropriate order.
+* Grain duration must be provided as a rational number wherever the cadence of the grain is constant so that back pressure can be applied through cable cleaves etc..
+* Ledger no longer has to be required in each node and the global context does not have to be checked. Some work will have to be done to ensure that the database is propagated in an appropriate order. However, code that works with ledger should continue to work.
+
 
 # Original Basecamp post
 

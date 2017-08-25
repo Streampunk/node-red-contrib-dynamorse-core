@@ -20,6 +20,8 @@ var dgram = require('dgram');
 var util = require('util');
 var H = require('highland');
 var webSock = require('./webSock.js').webSock;
+var ledgerReg = require('./LedgerDiscovery.js');
+var uuid = require('uuid');
 
 var hostname = require('os').hostname();
 var pid = process.pid;
@@ -61,6 +63,115 @@ function safeStatString (s) {
   return s.replace(/\W/g, '_');
 }
 
+// Cable database
+// Map of source node ID to the cable it creates
+// Casbles are objects with flow names videoA, videoB, audio1, audio2, anc1, anc2 etc.
+var cables = {};
+
+// Second is a map of cable destinations (Node-RED wires) back to source cables
+var cabling = {};
+
+// List of promises waiting to be satisfied by wires
+var pending = {};
+
+var discovery = [];
+
+const cableTypes = [ 'video', 'audio', 'anc', 'other' ];
+
+function generateIDs (c) {
+  cableTypes.forEach(t => {
+    if (c[t]) {
+      c[t] = c[t].map(x => {
+        if (x.flowID) { return x; }
+        else {
+          x.flowID = uuid.v4();
+          return x;
+        };
+      });
+      c[t] = c[t].map(x => {
+        if (x.sourceID) { return x; }
+        else {
+          if (x.source) {
+            var sourceID = uuid.v4();
+            c[t].find(y => y.source === x.source).forEach(z => {
+              z.soruceID = sourceID;
+            });
+          } else {
+            x.sourceID = uuid.v4();
+            return x;
+          }
+        }
+      });
+    }
+  });
+}
+
+function getID (idt, q) {
+  var c = cables[this.config.id];
+  if (q) {
+    var r = q.match(/(video|audio|anc|other)\[(\d+)\]/);
+    if (r) {
+      var f = c[r[1]][+r[2]];
+      return (f) ? f[idt] : f;
+    } else {
+      var firstType = cableTypes.find(t => c[t]);
+      var namedFlow = (firstType) ? c[firstType].find(f => f.name && f.name.match(q)) : undefined;
+      return (namedFlow) ? namedFlow[idt] : namedFlow;
+    }
+  } else {
+    var firstFlow = cableTypes.find(t => c[t] && c[t][0]);
+    return (firstFlow) ? c[firstFlow][0][idt] : firstFlow;
+  }
+}
+
+function makeCable(flows) {
+  generateIDs(flows);
+  console.log(this.config, flows);
+  cables[this.config.id] = flows;
+  this.config.wires[0].forEach(w => {
+    if (cabling[w]) {
+      if (cabling[w].indexOf(this.config.id) < 0)
+        cabling[w].push(this.config.id);
+    } else {
+      cabling[w] = [ this.config.id ];
+    }
+    if (pending[w]) { pending[w].forEach(f => { f(); }); };
+    delete pending[w];
+  });
+  discovery.forEach(f => {
+    f(this, flows);
+  });
+  return flows;
+}
+
+function findCable() {
+  var node = this;
+  var resolved = false;
+  return new Promise(function (resolve, reject) {
+    if (cabling[node.config.id])
+      resolve(cabling[node.config.id].map(x => cables[x]));
+    else {
+      if (!pending[node.config.id]) pending[node.config.id] = [];
+      pending[node.config.id].push(function() {
+        resolved = true;
+        resolve(cabling[node.config.id].map(x => cables[x]));
+      });
+      setTimeout(() => {
+        if (resolved === false)
+          reject(`Unable to find input wire for node with ID ${node.config.id} of type ${node.config.type} within 2s.`);
+        }, 2000);
+      }
+  });
+}
+
+// Add a discovery and registration prototcol, such as AMWA NMOS via ledger
+// The discovery Fn takes a node red node, its config and a logical casble description and registers them
+function addDiscovery(discoveryFn) {
+  discovery.push(discoveryFn);
+}
+
+addDiscovery(ledgerReg); // Hardwiring Ledger for now
+
 function Funnel (config) {
   var queue = new Queue;
   var wireCount = config.wires[0].length;
@@ -72,6 +183,7 @@ function Funnel (config) {
   var paused = false;
   var logger = this.context().global.get('logger');
   var ws = this.context().global.get('ws');
+  this.config = config;
 
   // console.log('***', util.inspect(this.setStatus, { showHidden: true }));
   node.setStatus('grey', 'ring', 'initialising');
@@ -270,6 +382,10 @@ function Funnel (config) {
   }
 }
 
+Funnel.prototype.makeCable = makeCable;
+Funnel.prototype.flowID = function (q) { return getID.call(this, 'flowID', q); }
+Funnel.prototype.sourceID = function (q) { return getID.call(this, 'sourceID', q); }
+
 function Valve (config) {
   var queue = new Queue;
   var wireCount = config.wires[0].length;
@@ -287,6 +403,7 @@ function Valve (config) {
     this.context().global.set('ws', ws);
   }
   this.wsMsg = new webSockMsg(node, ws, config.name||"valve");
+  this.config = config;
 
   this.nodeStatus = "";
   this.setStatus = setStatus.bind(this);
@@ -447,6 +564,11 @@ function Valve (config) {
   }
 }
 
+Valve.prototype.makeCable = makeCable;
+Valve.prototype.findCable = findCable;
+Valve.prototype.flowID = function (q) { return getID.call(this, 'flowID', q); }
+Valve.prototype.sourceID = function (q) { return getID.call(this, 'sourceID', q); }
+
 function Spout (config) {
   var node = this;
   var logger = this.context().global.get('logger');
@@ -463,6 +585,7 @@ function Spout (config) {
   this.wsMsg = new webSockMsg(node, ws, config.name||"spout");
   var numStreams = config.numStreams||1;
   var numEnds = 0;
+  this.config = config;
 
   var eachFn = null;
   var doneFn = () => { };
@@ -562,10 +685,13 @@ function Spout (config) {
   }
 }
 
+Spout.prototype.findCable = findCable;
+
 module.exports = {
   Funnel : Funnel,
   Valve : Valve,
   Spout : Spout,
   end : theEnd,
-  isEnd : isEnd
+  isEnd : isEnd,
+  addDiscovery : addDiscovery
 };

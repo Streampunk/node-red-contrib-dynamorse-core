@@ -16,7 +16,7 @@
 var redioactive = require('../util/Redioactive.js');
 
 module.exports = function (RED) {
-  function cleave (config) {
+  function Cleave (config) {
     RED.nodes.createNode(this, config);
     redioactive.Valve.call(this, config);
   }
