@@ -125,7 +125,7 @@ module.exports = function (RED) {
     // var flow = new ledger.Flow(null, null, localName, localDescription,
     //   "urn:x-nmos:format:" + tags.format[0], tags, source.id, null);
     //setTimeout(() => {
-      this.makeCable((config.format === 'video') ?
+    this.makeCable((config.format === 'video') ?
       { video: [ { tags: tags } ], backPressure: "video[0]" } :
       { audio: [ { tags: tags } ], backPressure: "audio[0]" }); //}, 1500);
 

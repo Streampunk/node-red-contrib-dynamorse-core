@@ -20,7 +20,7 @@ var dgram = require('dgram');
 var util = require('util');
 var H = require('highland');
 var webSock = require('./webSock.js').webSock;
-var ledgerReg = require('./LedgerDiscovery.js');
+var ledgerReg = require('./LedgerDiscovery.js').register;
 var uuid = require('uuid');
 
 var hostname = require('os').hostname();

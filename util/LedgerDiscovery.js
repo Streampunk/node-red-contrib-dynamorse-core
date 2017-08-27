@@ -15,6 +15,52 @@
 
 const cableTypes = [ 'video', 'audio', 'anc', 'other' ];
 
+function makeNMOSTags (t) {
+  var n = {};
+  Object.keys(t).forEach(k => {
+    switch (typeof t[k]) {
+      case 'string': n[k] = [ t[k] ]; break;
+      case 'number': n[k] = [ `${t[k]}` ]; break;
+      case 'object':
+        if (Array.isArray(t[k]) && t[k].length === 2 &&
+            typeof t[k][0] === 'number' && typeof t[k][1] === 'number') {
+          n[k] = [ `${t[k][0]}/${t[k][1]}` ];
+        } else {
+          n[k] = (t[k]) ? [ t[k].toString() ] : [];
+        }
+        break;
+      case 'boolean':
+        n[k] = (t[k] === true) ? [ '1' ] : [ '0' ];
+        break;
+      case 'undefined':
+      case 'null':
+        break;
+      default:
+        n[k] = [ t[k].toString() ]; break;
+    };
+  });
+  return n;
+}
+
+function makeDynamorseTags (t) {
+  var d = {};
+  Object.keys(t)
+  .filter(k => Array.isArray(t[k]) && t[k].length > 0)
+  .forEach(k => {
+    if (k === 'interlace') { d[k] = (t[k][0] === '1'); return; }
+    d[k] = +t[k][0];
+    if (isNaN(d[k])) {
+      var r = t[k][0].match(/(\d+)\/(\d+)/);
+      if (r) {
+        d[k] = [+r[1], +r[2]];
+      } else {
+        d[k] = t[k][0];
+      };
+    };
+  });
+  return d;
+}
+
 function ledgerReg(node, c) {
   var nodeAPI = node.context().global.get('nodeAPI');
   var ledger = node.context().global.get('ledger');
@@ -32,14 +78,17 @@ function ledgerReg(node, c) {
          `${localDescription}-${t}`,
          `urn:x-nmos:format:${f.tags.format}`, null, null, pipelinesID, null);
       var flow = new ledger.Flow(f.flowID, null, name, `${localDescription}-${t}`,
-        `urn:x-nmos:format:${f.tags.format}`, null, f.sourceID, null); // TODO covert tags
-      console.log('source', source, 'flow', flow);
+        `urn:x-nmos:format:${f.tags.format}`, makeNMOSTags(f.tags), f.sourceID, null);
       nodeAPI.putResource(source) // TODO source may already exist
-        .then(() => nodeAPI.putResource(flow))
-        .then(() => { node.log(`Registered NMOS resources source ${source.id} and flow ${flow.id}.`)},
-              err => { if (err) return node.warn(`Unable to register source and/or flow: ${err}`); });
+      .then(() => nodeAPI.putResource(flow))
+      .then(() => { node.log(`Registered NMOS resources source ${source.id} and flow ${flow.id}.`)},
+            err => { if (err) return node.warn(`Unable to register source and/or flow: ${err}`); });
     };
   });
 }
 
-module.exports = ledgerReg;
+module.exports = {
+  register: ledgerReg,
+  makeNMOSTags: makeNMOSTags,
+  makeDynamorseTags: makeDynamorseTags
+};
