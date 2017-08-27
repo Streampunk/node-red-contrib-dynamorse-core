@@ -61,6 +61,8 @@ function makeDynamorseTags (t) {
   return d;
 }
 
+const concat = (a, b) => a.concat(b);
+
 function ledgerReg(node, c) {
   var nodeAPI = node.context().global.get('nodeAPI');
   var ledger = node.context().global.get('ledger');
@@ -70,21 +72,26 @@ function ledgerReg(node, c) {
     //RED.nodes.getNode(node.config.device).nmos_id :
     node.context().global.get('pipelinesID');
 
-  cableTypes.filter(t => c[t] && c[t].length > 0).forEach(t => {
+  var q = cableTypes.filter(t => c[t] && c[t].length > 0).map(t => {
+    var p = [];
     for ( var x = 0 ; x < c[t].length ; x++ ) {
       var f = c[t][x];
       var name = (f.name) ? `${localName}-${f.name}` : `${localName}-${t}[${x}]`;
       var source = new ledger.Source(f.sourceID, null, name,
-         `${localDescription}-${t}`,
+         `${localDescription} ${t} streams`,
          `urn:x-nmos:format:${f.tags.format}`, null, null, pipelinesID, null);
-      var flow = new ledger.Flow(f.flowID, null, name, `${localDescription}-${t}`,
+      var flow = new ledger.Flow(f.flowID, null, name, `${localDescription} ${t} stream ${x}`,
         `urn:x-nmos:format:${f.tags.format}`, makeNMOSTags(f.tags), f.sourceID, null);
-      nodeAPI.putResource(source) // TODO source may already exist
-      .then(() => nodeAPI.putResource(flow))
-      .then(() => { node.log(`Registered NMOS resources source ${source.id} and flow ${flow.id}.`)},
-            err => { if (err) return node.warn(`Unable to register source and/or flow: ${err}`); });
+      p.push(
+        nodeAPI.putResource(source) // TODO source may already exist
+        .then(() => nodeAPI.putResource(flow))
+        .then(() => { node.log(`Registered NMOS resources source ${source.id} and flow ${flow.id}.`)},
+            err => { if (err) return node.warn(`Unable to register source and/or flow: ${err}`); })
+      );
     };
+    return p;
   });
+  return Promise.all(q.reduce(concat));
 }
 
 module.exports = {
