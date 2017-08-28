@@ -93,9 +93,10 @@ function generateIDs (c) {
         else {
           if (x.source) {
             var sourceID = uuid.v4();
-            c[t].find(y => y.source === x.source).forEach(z => {
-              z.soruceID = sourceID;
+            c[t].filter(y => (y.source === x.source)).forEach(z => {
+              z.sourceID = sourceID;
             });
+            return x;
           } else {
             x.sourceID = uuid.v4();
             return x;
@@ -126,7 +127,6 @@ function getID (idt, q) {
 
 function makeCable(flows) {
   generateIDs(flows);
-  console.log(this.config, flows);
   cables[this.config.id] = flows;
   this.config.wires[0].forEach(w => {
     if (cabling[w]) {

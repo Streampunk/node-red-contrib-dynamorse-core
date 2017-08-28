@@ -20,6 +20,10 @@ module.exports = function (RED) {
   function ValveTest (config) {
     RED.nodes.createNode(this, config);
     redioactive.Valve.call(this, config);
+    this.findCable().then(c => {
+      this.log(`Details of input cable 1 are ${c}`);
+      this.makeCable(c);
+    }, e => { this.warn(e); });
     this.consume(function (err, x, push, next) {
       if (err) {
         push(err);

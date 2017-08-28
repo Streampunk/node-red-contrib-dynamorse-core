@@ -113,44 +113,19 @@ module.exports = function (RED) {
       makeVideoTags(+config.width, +config.height, '420P', 'raw', 0) :
       makeAudioTags(+config.channels, +config.bitsPerSample);
     this.baseTime = [ Date.now() / 1000|0, (Date.now() % 1000) * 1000000 ];
-//    var nodeAPI = this.context().global.get('nodeAPI');
-//    var ledger = this.context().global.get('ledger');
-    // var localName = config.name || `${config.type}-${config.id}`;
-    // var localDescription = config.description || `${config.type}-${config.id}`;
-    // var pipelinesID = config.device ?
-    //   RED.nodes.getNode(config.device).nmos_id :
-    //   this.context().global.get('pipelinesID');
-    // var source = new ledger.Source(null, null, localName, localDescription,
-    //   "urn:x-nmos:format:" + tags.format[0], null, null, pipelinesID, null);
-    // var flow = new ledger.Flow(null, null, localName, localDescription,
-    //   "urn:x-nmos:format:" + tags.format[0], tags, source.id, null);
-    //setTimeout(() => {
+
     this.makeCable((config.format === 'video') ?
       { video: [ { tags: tags } ], backPressure: "video[0]" } :
-      { audio: [ { tags: tags } ], backPressure: "audio[0]" }); //}, 1500);
+      { audio: [ { tags: tags } ], backPressure: "audio[0]" });
 
-    var flowID = uuid.v4(); //this.flowID();
-    var sourceID = uuid.v4(); //this.sourceID();
+    var flowID = this.flowID();
+    var sourceID = this.sourceID();
 
     this.generator((push, next) => {
       if (this.count < +config.numPushes) {
-        // if (firstGrain) {
-        //   firstGrain = false;
-        //   nodeAPI.putResource(source, function(err, result) {
-        //     if (err) return node.log(`Unable to register source: ${err}`);
-        //   });
-        //   nodeAPI.putResource(flow).then(() => {
-        //     push(null, makeGrain(srcBuf, this.baseTime, flow.id, source.id));
-        //     this.count++;
-        //     setTimeout(next, +config.delay);
-        //   }, err => {
-        //     if (err) return node.log(`Unable to register flow: ${err}`);
-        //   });
-        // } else {
-          push(null, makeGrain(srcBuf, this.baseTime, flowID, sourceID));
-          this.count++;
-          setTimeout(next, +config.delay);
-        // }
+        push(null, makeGrain(srcBuf, this.baseTime, flowID, sourceID));
+        this.count++;
+        setTimeout(next, +config.delay);
       } else {
         push(null, redioactive.end);
       }
