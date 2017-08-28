@@ -685,6 +685,8 @@ function Spout (config) {
   }
 }
 
+// Spouts can make cables when they are NMOS senders
+Spout.prototype.makeCable = makeCable;
 Spout.prototype.findCable = findCable;
 
 module.exports = {
