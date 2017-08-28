@@ -21,6 +21,7 @@ var util = require('util');
 var H = require('highland');
 var webSock = require('./webSock.js').webSock;
 var ledgerReg = require('./LedgerDiscovery.js').register;
+var makeDynamorseTags = require('./LedgerDiscovery.js').makeDynamorseTags;
 var uuid = require('uuid');
 
 var hostname = require('os').hostname();
@@ -144,24 +145,45 @@ function makeCable(flows) {
   return flows;
 }
 
-function findCable() {
+function getNMOSCable (g) {
+  if (!g) return Promise.reject();
+  var node = this;
+  var nodeAPI = node.context().global.get('nodeAPI');
+  var flow_id = uuid.unparse(g.flow_id);
+  return nodeAPI.getResource(flow_id, 'flow')
+  .then(f => {
+    var c = { };
+    var t = makeDynamorseTags(f.tags);
+    c[t.format] = [ { tags: t, flowID: flow_id, sourceID: g.source_id } ];
+    c.backPressure = `${c[t.format]}[0]`;
+    return c;
+  });
+}
+
+function findCable (g) {
   var node = this;
   var resolved = false;
   return new Promise(function (resolve, reject) {
-    if (cabling[node.config.id])
+    if (cabling[node.config.id]) {
       resolve(cabling[node.config.id].map(x => cables[x]));
-    else {
-      if (!pending[node.config.id]) pending[node.config.id] = [];
-      pending[node.config.id].push(function() {
-        resolved = true;
-        resolve(cabling[node.config.id].map(x => cables[x]));
-      });
-      setTimeout(() => {
-        if (resolved === false)
-          reject(`Unable to find input wire for node with ID ${node.config.id} of type ${node.config.type} within 2s.`);
-        }, 2000);
-      }
-  });
+    } else {
+      getNMOSCable(g).then(
+        c => { resolve(c); },
+        e => {
+          if (!pending[node.config.id]) pending[node.config.id] = [];
+          pending[node.config.id].push(function() {
+            resolved = true;
+            resolve(cabling[node.config.id].map(x => cables[x]));
+          });
+          setTimeout(() => {
+            if (resolved === false)
+              reject(`Unable to find input wire for node with ID ${node.config.id} of type ${node.config.type} within 2s.`);
+            }, 2000);
+          }
+        );
+      };
+    }
+  );
 }
 
 // Add a discovery and registration prototcol, such as AMWA NMOS via ledger
