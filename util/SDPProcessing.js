@@ -32,7 +32,8 @@ var sdpToTags = function(sdp, config) {
     this.setTag('depth', sdp, sdp.getDepth, config);
     this.setTag('colorimetry', sdp, sdp.getColorimetry, config);
     this.setTag('interlace', sdp, sdp.getInterlace, config);
-    this.tags.packing = [ 'pgroup' ];
+    this.tags.packing = [ 'pgroup' ]; // default
+    this.setTag('packing', sdp, undefined, config);
   } else if (this.tags.format[0].endsWith('audio')) {
     this.setTag('channels', sdp, sdp.getEncodingParameters, config);
   }
