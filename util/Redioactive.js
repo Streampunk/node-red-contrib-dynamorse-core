@@ -167,23 +167,27 @@ function findCable (g) {
     if (cabling[node.config.id]) {
       resolve(cabling[node.config.id].map(x => cables[x]));
     } else {
-      getNMOSCable(g).then(
-        c => { resolve(c); },
-        e => {
-          if (!pending[node.config.id]) pending[node.config.id] = [];
-          pending[node.config.id].push(function() {
-            resolved = true;
-            resolve(cabling[node.config.id].map(x => cables[x]));
-          });
-          setTimeout(() => {
-            if (resolved === false)
-              reject(`Unable to find input wire for node with ID ${node.config.id} of type ${node.config.type} within 2s.`);
-            }, 2000);
-          }
-        );
-      };
-    }
-  );
+      if (!pending[node.config.id]) pending[node.config.id] = [];
+      pending[node.config.id].push(function() {
+        if (!resolved) {
+          resolved = true;
+          resolve(cabling[node.config.id].map(x => cables[x]));
+        };
+      });
+      getNMOSCable(g).then(c => { 
+        if (!resolved) {
+          resolved = true;
+          resolve(c);
+        }
+      }, e => {
+        node.debug(`Did not resolve cable for ${node.id} via NMOS. Resolution via internal cable is pending.`);
+      });
+      setTimeout(() => {
+        if (resolved === false)
+          reject(`Unable to find input wire for node with ID ${node.config.id} of type ${node.config.type} within 2s.`);
+      }, 2000);
+    };
+  });
 }
 
 // Add a discovery and registration prototcol, such as AMWA NMOS via ledger
@@ -309,9 +313,13 @@ function Funnel (config) {
     } // });
   };
   this.eventMuncher = (emitter, event, map) => {
-    emitter.on(event, value => {
-      if (map) value = map(value);
-      push(null, value);
+    emitter.on(event, function () {
+      var value = (map) ? map.apply(null, arguments) : arguments[0];
+      if (map && Array.isArray(value)) {
+        value.forEach(v => push(null, v));
+      } else {
+        push(null, value);
+      }
       next();
     });
   };

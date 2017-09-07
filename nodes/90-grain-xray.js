@@ -14,12 +14,27 @@
 */
 
 var redioactive = require('../util/Redioactive.js');
+var util = require('util');
 
 module.exports = function (RED) {
   function GrainDebug (config) {
     RED.nodes.createNode(this, config);
     redioactive.Valve.call(this, config);
     this.count = 0;
+    var node = this;
+    this.findCable().then(c => {
+      console.log('Found a cable', c);
+      this.makeCable(c[0]); // Assume one-to-one, not splicing
+      if (config.showCable === true) {
+        var formattedCable = JSON.stringify(c, null, 2);
+        RED.comms.publish('debug', {
+          format: 'Cable',
+          msg: formattedCable
+        }, true);
+        if (config.toConsole === true)
+          node.log(formattedCable);
+      };
+    });
     this.consume((err, x, push, next) => {
       if (err) {
         push (err);
@@ -43,5 +58,6 @@ module.exports = function (RED) {
       }
     });
   }
+  util.inherits(GrainDebug, redioactive.Valve);
   RED.nodes.registerType("grain-xray", GrainDebug);
 }

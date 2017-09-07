@@ -114,7 +114,7 @@ TestUtil.nodeRedTest('A funnelx2->spout flow is posted to Node-RED', {
   testFlow.nodes[1].id = `${funnel2NodeId}`;
   testFlow.nodes[1].end = params.numPushes-1;
   testFlow.nodes[1].maxBuffer = params.funnelMaxBuffer;
-  testFlow.nodes[0].delay = 4;
+  testFlow.nodes[1].delay = 4;
   testFlow.nodes[1].wires[0][0] = `${spoutNodeId}`;
 
   testFlow.nodes[2] = JSON.parse(TestUtil.testNodes.spoutTestNode);
@@ -136,7 +136,7 @@ TestUtil.nodeRedTest('A funnelx2->spout flow is posted to Node-RED', {
     params.funCount[msgObj.push]++;
     if (2===params.funCount[msgObj.push])
       params.count++;
-  } else if (msgObj.hasOwnProperty('end') && (msgObj.src === 'spout') && 
+  } else if (msgObj.hasOwnProperty('end') && (msgObj.src === 'spout') &&
              (params.funCurCount[0] == params.numPushes) && (params.funCurCount[1] == params.numPushes)) {
     t.equal(params.count, params.numPushes, `received end after expected number of pushes`);
     onEnd();

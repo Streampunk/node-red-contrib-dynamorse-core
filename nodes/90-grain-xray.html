@@ -21,6 +21,7 @@
       defaults: {
         showEvery : { value : 1, validate : RED.validators.number() },
         toConsole : { value : false },
+        showCable : { value : true },
         name: { value : "" },
         maxBuffer : { value : 10, validate : RED.validators.number() }
       },
@@ -48,6 +49,10 @@
     <input type="number" id="node-input-showEvery" placeholder="1" minimum="1" style="width: 100px">
     <label for="node-input-toConsole" style="width: 80px">&nbsp;<i class="fa fa-desktop"></i> console?</label>
     <input type="checkbox" id="node-input-toConsole" unchecked style="width: 80px">
+  </div>
+  <div class="form-row">
+    <label for="node-input-showCable"><i class="fa fa-plug" aria-hidden="true"></i> cable?</label>
+    <input type="checkbox" id="node-input-showCable" style="width: 80px">
   </div>
   </script>
 
@@ -86,6 +91,10 @@
     <td><i class="fa fa-desktop"></i> console?</td>
     <td>As well as the debug tab, also display the grain information on the console
     of the server?</td>
+   </tr>
+   <tr>
+     <td><i class="fa fa-plug" aria-hidden="true"></i> cable?</td>
+     <td>Show details of the virtual cable, including any tags?</td>
    </tr>
   </table>
   </div>

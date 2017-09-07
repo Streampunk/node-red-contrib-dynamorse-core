@@ -79,12 +79,12 @@ function ledgerReg(node, c) {
       var name = (f.name) ? `${localName}-${f.name}` : `${localName}-${t}[${x}]`;
       var source = new ledger.Source(f.sourceID, null, name,
          `${localDescription} ${t} streams`,
-         `urn:x-nmos:format:${f.tags.format}`, null, null, pipelinesID, null); 
+         `urn:x-nmos:format:${f.tags.format}`, null, null, pipelinesID, null);
       var flow = new ledger.Flow(f.flowID, null, name, `${localDescription} ${t} stream ${x}`,
         `urn:x-nmos:format:${f.tags.format}`, makeNMOSTags(f.tags), f.sourceID, null);
       p.push(
         nodeAPI.getResource(source.id, "source")
-        .then(x => Promose.resolve(x), e => nodeAPI.putResource(source))
+        .then(x => Promise.resolve(x), e => nodeAPI.putResource(source))
         .then(x => nodeAPI.putResource(flow))
         .then(x => { node.log(`Registered NMOS resources source ${source.id} and flow ${flow.id}.`)},
             err => { if (err) return node.warn(`Unable to register source and/or flow: ${err}`); })
