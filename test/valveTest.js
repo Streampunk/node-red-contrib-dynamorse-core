@@ -21,8 +21,8 @@ module.exports = function (RED) {
     RED.nodes.createNode(this, config);
     redioactive.Valve.call(this, config);
     this.findCable().then(c => {
-      this.log(`Details of input cable 1 are ${c}`);
-      this.makeCable(c);
+      this.log(`Details of input cable(s) is/are:\n${JSON.stringify(c, null, 2)}`);
+      this.makeCable(c[0]);
     }, e => { this.warn(e); });
     this.consume(function (err, x, push, next) {
       if (err) {

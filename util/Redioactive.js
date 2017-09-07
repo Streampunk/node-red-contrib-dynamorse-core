@@ -81,6 +81,12 @@ var cabling = {};
 // List of promises waiting to be satisfied by wires
 var pending = {};
 
+function clearCables() {
+  cables = {};
+  cabling = {};
+  pending = {};
+};
+
 var discovery = [];
 
 const cableTypes = [ 'video', 'audio', 'anc', 'other' ];
@@ -133,8 +139,21 @@ function getID (idt, q) {
 }
 
 function makeCable(flows) {
+  if (Array.isArray(flows)) {
+    if (flows.length > 0) {
+      this.warn(`makeCable passed an array of cables for node ${this.config.id} of type ${this.config.type}. Unpacking the first item only.`)
+      flows = flows[0];
+    } else {
+      return this.error('makeCable called with an empty array.');
+    }
+  }
   generateIDs(flows);
   cables[this.config.id] = flows;
+  if (!this.context().flow.get('flowResetFlag')) {
+    this.log('Resetting cabling after re-deploy.');
+    cabling = {};
+    this.context().flow.set('flowResetFlag', true);
+  };
   this.config.wires[0].forEach(w => {
     if (cabling[w]) {
       if (cabling[w].indexOf(this.config.id) < 0)
@@ -148,7 +167,6 @@ function makeCable(flows) {
   discovery.forEach(f => {
     f(this, flows);
   });
-  console.log('MAKING ***', this.wsMsg);
   this.wsMsg.open().then(() => {
     this.wsMsg.send({"made": flows, "srcID": this.config.id, "srcType": this.config.type}); });
   return flows;
@@ -742,5 +760,6 @@ module.exports = {
   Spout : Spout,
   end : theEnd,
   isEnd : isEnd,
-  addDiscovery : addDiscovery
+  addDiscovery : addDiscovery,
+  clearCables : clearCables
 };
