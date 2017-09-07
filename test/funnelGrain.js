@@ -79,7 +79,7 @@ function makeAudioTags(channels, bitsPerSample) {
     channels: channels,
     clockRate: 48000,
     encodingName: `L${bitsPerSample}`,
-    blockAlign: `${(((bitsPerSample+7)/8)>>>0)}`,
+    blockAlign: ((bitsPerSample+7)/8)>>>0,
     grainDuration: [1, 25]
   };
   return tags;

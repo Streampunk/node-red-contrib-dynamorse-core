@@ -58,6 +58,12 @@ webSockMsg.prototype.send = function(obj) {
   if (this.ws)
     this.ws.send(this.node, obj);
 }
+webSockMsg.prototype.open = function () {
+  var self = this;
+  return new Promise(function (resolve, reject) {
+    self.ws.open(() => { resolve(); });
+  });
+}
 
 function safeStatString (s) {
   // console.log('+++', s);
@@ -142,6 +148,9 @@ function makeCable(flows) {
   discovery.forEach(f => {
     f(this, flows);
   });
+  console.log('MAKING ***', this.wsMsg);
+  this.wsMsg.open().then(() => {
+    this.wsMsg.send({"made": flows, "srcID": this.config.id, "srcType": this.config.type}); });
   return flows;
 }
 
@@ -165,19 +174,27 @@ function findCable (g) {
   var resolved = false;
   return new Promise(function (resolve, reject) {
     if (cabling[node.config.id]) {
-      resolve(cabling[node.config.id].map(x => cables[x]));
+      var cs = cabling[node.config.id].map(x => cables[x]);
+      node.wsMsg.open().then(() => {
+        node.wsMsg.send({"found": cs, "srcID": node.config.id, "srcType": node.config.type}); });
+      resolve(cs);
     } else {
       if (!pending[node.config.id]) pending[node.config.id] = [];
       pending[node.config.id].push(function() {
         if (!resolved) {
           resolved = true;
-          resolve(cabling[node.config.id].map(x => cables[x]));
+          var cs = cabling[node.config.id].map(x => cables[x]);
+          node.wsMsg.open().then(() => {
+            node.wsMsg.send({"found": cs, "srcID": node.config.id, "srcType": node.config.type}); });
+          resolve(cs);
         };
       });
-      getNMOSCable(g).then(c => { 
+      getNMOSCable(g).then(cs => {
         if (!resolved) {
           resolved = true;
-          resolve(c);
+          node.wsMsg.open().then(() => {
+            node.wsMsg.send({"found": cs, "srcID": node.config.id, "srcType": node.config.type}); });
+          resolve(cs);
         }
       }, e => {
         node.debug(`Did not resolve cable for ${node.id} via NMOS. Resolution via internal cable is pending.`);
