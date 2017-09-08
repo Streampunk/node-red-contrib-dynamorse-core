@@ -172,9 +172,8 @@ function makeCable(flows) {
   return flows;
 }
 
-function getNMOSCable (g) {
+function getNMOSCable (node, g) {
   if (!g) return Promise.reject();
-  var node = this;
   var nodeAPI = node.context().global.get('nodeAPI');
   var flow_id = uuid.unparse(g.flow_id);
   return nodeAPI.getResource(flow_id, 'flow')
@@ -207,7 +206,7 @@ function findCable (g) {
           resolve(cs);
         };
       });
-      getNMOSCable(g).then(cs => {
+      getNMOSCable(node, g).then(cs => {
         if (!resolved) {
           resolved = true;
           node.wsMsg.open().then(() => {
