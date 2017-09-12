@@ -108,10 +108,18 @@ var sdpToExt = function (sdp) {
   return this.exts;
 }
 
+var sdpURLReaderDynamorse = function (config, cb) {
+  return sdpURLReader(config, (err, v) => {
+    if (err) return cb(err);
+    cb(makeDynamorseTags(v));
+  });
+}
+
 module.exports = {
   sdpToTags : sdpToTags,
   setTag : setTag,
   sdpURLReader : sdpURLReader,
+  sdpURLReaderDynamorse : sdpURLReaderDynamorse,
   sdpToExt : sdpToExt,
   SDP: SDP
 };
