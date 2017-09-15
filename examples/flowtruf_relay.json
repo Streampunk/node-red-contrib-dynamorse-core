@@ -1,0 +1,150 @@
+[{
+  "id": "fdc9ba91.658b18",
+  "type": "glob-in",
+  "z": "4a9a086a.b565f8",
+  "name": "truffles",
+  "glob": "d:\\streampunk\\truffles\\truffles2*.v210",
+  "grainDuration": "1/25",
+  "header": "",
+  "loop": true,
+  "regenerate": false,
+  "description": "",
+  "device": "da7405b8.258bf8",
+  "maxBuffer": 10,
+  "sdpURL": "",
+  "encodingName": "raw",
+  "clockRate": 90000,
+  "sampling": "YCbCr-4:2:2",
+  "width": 1920,
+  "height": 1080,
+  "depth": 10,
+  "colorimetry": "BT709-2",
+  "interlace": true,
+  "packing": "v210",
+  "channels": 0,
+  "bitrate": 0,
+  "wsPort": 0,
+  "x": 99.10000610351562,
+  "y": 152,
+  "wires": [
+    ["9e1d37e9.aaa538"]
+  ]
+}, {
+  "id": "1f64f7c1.d44718",
+  "type": "glob-in",
+  "z": "4a9a086a.b565f8",
+  "name": "flowers",
+  "glob": "d:\\streampunk\\flowers\\flowers3*.v210",
+  "grainDuration": "1/25",
+  "header": "",
+  "loop": true,
+  "regenerate": false,
+  "description": "",
+  "device": "da7405b8.258bf8",
+  "maxBuffer": 10,
+  "sdpURL": "",
+  "encodingName": "raw",
+  "clockRate": 90000,
+  "sampling": "YCbCr-4:2:2",
+  "width": 1920,
+  "height": 1080,
+  "depth": 10,
+  "colorimetry": "BT709-2",
+  "interlace": true,
+  "packing": "v210",
+  "channels": 0,
+  "bitrate": 0,
+  "wsPort": 0,
+  "x": 87.10000610351562,
+  "y": 438,
+  "wires": [
+    ["b8c56ba7.52f198"]
+  ]
+}, {
+  "id": "9e1d37e9.aaa538",
+  "type": "packer",
+  "z": "4a9a086a.b565f8",
+  "name": "",
+  "maxBuffer": 10,
+  "description": "",
+  "device": "da7405b8.258bf8",
+  "dstFormat": "YUV422P10",
+  "x": 239.10000610351562,
+  "y": 216.39999389648438,
+  "wires": [
+    ["142d6ba2.50e4a4"]
+  ]
+}, {
+  "id": "b8c56ba7.52f198",
+  "type": "packer",
+  "z": "4a9a086a.b565f8",
+  "name": "",
+  "maxBuffer": 10,
+  "description": "",
+  "device": "da7405b8.258bf8",
+  "dstFormat": "YUV422P10",
+  "x": 219.10000610351562,
+  "y": 380.3999938964844,
+  "wires": [
+    ["142d6ba2.50e4a4"]
+  ]
+}, {
+  "id": "d8be87c2.b6c4f8",
+  "type": "packer",
+  "z": "4a9a086a.b565f8",
+  "name": "",
+  "maxBuffer": 10,
+  "description": "",
+  "device": "da7405b8.258bf8",
+  "dstFormat": "v210",
+  "x": 495.10003662109375,
+  "y": 302.3999938964844,
+  "wires": [
+    ["9b0b65fd.905b28"]
+  ]
+}, {
+  "id": "9b0b65fd.905b28",
+  "type": "sdi-out",
+  "z": "4a9a086a.b565f8",
+  "name": "bm hdmi out",
+  "frameCache": 5,
+  "deviceIndex": 0,
+  "timeout": 40,
+  "x": 690,
+  "y": 280,
+  "wires": []
+}, {
+  "id": "142d6ba2.50e4a4",
+  "type": "relay",
+  "z": "4a9a086a.b565f8",
+  "name": "",
+  "description": "",
+  "device": "da7405b8.258bf8",
+  "maxBuffer": 10,
+  "active": true,
+  "actControl": "/1/toggle1",
+  "x": 327.1000061035156,
+  "y": 299.6000061035156,
+  "wires": [
+    ["d8be87c2.b6c4f8"]
+  ]
+}, {
+  "id": "da7405b8.258bf8",
+  "type": "device",
+  "nmos_id": "9a6b969b-c1eb-40b6-9525-ea875de2e814",
+  "version": "1505392947:873953349",
+  "nmos_type": "urn:x-nmos:device:pipeline",
+  "nmos_label": "pipelines-grace-10564",
+  "node_id": "554cadf2-c118-486c-8504-c7ede0a44698",
+  "node_ref": "d8044477.27fbb8",
+  "senders": [],
+  "receivers": []
+}, {
+  "id": "d8044477.27fbb8",
+  "type": "self",
+  "nmos_id": "554cadf2-c118-486c-8504-c7ede0a44698",
+  "version": "1505392947:841565484",
+  "nmos_label": "Dynamorse grace 10564",
+  "href": "http://dynamorse-grace-10564.local:3101",
+  "hostname": "grace"
+}]
