@@ -123,6 +123,17 @@ module.exports = function (RED) {
 
     this.generator((push, next) => {
       if (this.count < +config.numPushes) {
+        if (0 === this.count) {
+          var nodeAPI = this.context().global.get('nodeAPI');
+          nodeAPI.getResource(flowID, 'flow', (err, f) => {
+            if (err) {
+              this.warn(`flowID ${flowID} not found in NMOS registry`);
+              this.wsMsg.send({'flowID': `flowID ${flowID} not found`});
+            } else
+              this.wsMsg.send({'flowID': 'flowID OK'});
+          });
+        }
+
         push(null, makeGrain(srcBuf, this.baseTime, flowID, sourceID));
         this.count++;
         setTimeout(next, +config.delay);
