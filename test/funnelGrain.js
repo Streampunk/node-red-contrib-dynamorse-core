@@ -57,6 +57,8 @@ function makeVideoTags(width, height, packing, encodingName, interlace) {
     packing: packing,
     encodingName: encodingName,
     colorimetry: "BT709-2",
+    depth: 10,
+    sampling: 'YCbCr-4:2:2',
     interlace: interlace === 1,
     grainDuration: [1, 25]
   };
