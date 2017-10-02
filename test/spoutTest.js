@@ -15,18 +15,27 @@
 
 var util = require('util');
 var redioactive = require('../util/Redioactive.js');
+var Grain = require('../model/Grain.js');
 
 module.exports = function (RED) {
   function TestSpout (config) {
     RED.nodes.createNode(this, config);
     redioactive.Spout.call(this, config);
-    this.findCable().then(c => {
-      this.log(`Details of input cable(s) is/are:\n${JSON.stringify(c, null, 2)}`);
-    }, e => { this.warn(e); });
+    var cableChecked = false;
     this.each((x, next) => {
       this.log(`Received ${util.inspect(x)}.`);
-      if (config.timeout === 0) setImmediate(next);
-      else setTimeout(next, config.timeout);
+
+      var nextJob = cableChecked ? Promise.resolve(x) :
+      this.findCable(x)
+      .then(c => {
+        this.log(`Details of input cable(s) is/are:\n${JSON.stringify(c, null, 2)}`);
+      }, e => { this.warn(e); });
+      cableChecked = true;
+
+      nextJob.then(() => {
+        if (config.timeout === 0) setImmediate(next);
+        else setTimeout(next, config.timeout);
+      })
     });
     this.errors((e, next) => {
       this.warn(`Received unhandled error: ${e.message}.`);

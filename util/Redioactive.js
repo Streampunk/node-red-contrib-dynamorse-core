@@ -510,8 +510,8 @@ function Valve (config) {
     };
   };
   var push = (err, val) => {
-    node.log(`Push received with value ${val}, queue length ${queue.length}, pending ${JSON.stringify(pending)}`);
     if (err) {
+      node.error(`Push received with error: '${err}'`);
       node.setStatus('red', 'dot', 'error');
       node.wsMsg.send({"error": err});
       node.send({
@@ -520,6 +520,7 @@ function Valve (config) {
         pull : pull
       });
     } else {
+      node.log(`Push received with value ${val}, queue length ${queue.length}, pending ${JSON.stringify(pending)}`);
       if (queue.length <= maxBuffer) {
       //  node.log(queue);
         if (isEnd(val))
@@ -655,7 +656,7 @@ function Spout (config) {
   var doneFn = () => { };
   var errorFn = (err, n) => { // Default error handler shuts the pipeline
     node.wsMsg.send({"error": err});
-    node.error(`Unhandled error ${err.toString()}.`);
+    node.error(`Unhandled error: '${err}'.`);
     doneFn = () => { };
     eachFn = null;
   }
