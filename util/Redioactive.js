@@ -348,6 +348,7 @@ function Funnel (config) {
   };
   this.eventMuncher = (emitter, event, map) => {
     emitter.on(event, function () {
+//      console.log('*** Received an event.');
       var value = (map) ? map.apply(null, arguments) : arguments[0];
       if (map && Array.isArray(value)) {
         value.forEach(v => push(null, v));
