@@ -51,7 +51,7 @@ At a concert, a mixing desk is connected to a stage by a big fat cable containin
 
 For the time being and to reduce scope, cables can be scaled by increasing the number of flows, but a cable cannot be nested collection of other cables. Splicers can be used to combine two groups into one (see below). In the first instance, the grain that flow down a cable will all flow in the same direction.
 
-## Splice, sever and braid
+## Splice, cleave and braid
 
 Cables need to be managed by joining, splitting, remapping and filtering the flows they contain so that a destination valve or spout receives only the flows it can process without having to build complex filter logic everywhere. In an IoT approach, this is equivalent to electrical switching and junction boxes.
 
