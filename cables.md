@@ -2,11 +2,11 @@
 
 ## The problem
 
-In the current dynamorse model, one Node-RED _wire_ equates to one Node-RED flow, meaning that wiring up multiple video, audio and ancillary outputs from a single source to a single destination is cumbersome and time consuming. Although this is a good match to the theoretical data model for elementary flows of grains, it is not the most user friendly way of connecting devices in an IoT-style. Ideally, you could connect an SDI-In node via a single Node-RED _cable_ to a SDI-Out node and transport all the flows that the SDI-In node generates. Further use cases of using _cables_, a form of _logical connection group_, are listed below.
+In the current dynamorse model, one Node-RED _wire_ equates one-to0one to an NMOS flow, meaning that wiring up multiple video, audio and ancillary outputs from a single source to a single destination is cumbersome and time consuming. Although this is a good match to the theoretical data model for elementary flows of grains, it is not the most user friendly way of connecting devices in an IoT-style. Ideally, you could connect an SDI-In node via a single Node-RED _cable_ to a SDI-Out node and transport all the flows that the SDI-In node generates. Further use cases of using _cables_, a form of _logical connection group_, are listed below.
 
-At the moment, a tight coupling exists between the ledger implementation of registration and discovery and each node. While considering the ability to carry multiple flows per cable, this is also an opportunity to decouple ledger from each node. Ledger is used as the means for a destination to discover the format of the grains it is receiving, but recent brittle changes in the NMOS specifications have illustrated that this is a bad design. A better approach would be for dynamorse to have its own internal model of flows, sources, cables etc., separating it from any specific external registration and discovery system.
+Previously, a tight coupling exists between the ledger implementation of registration and discovery and each node. While considering the ability to carry multiple flows per cable, this is also an opportunity to decouple ledger from each node. Ledger is used as the means for a destination to discover the format of the grains it is receiving, but lack of extension points in NMOS specification updates have illustrated that this is a bad design. A better approach would be for dynamorse to have its own internal model of flows, sources, cables etc., separating it from any specific external registration and discovery system.
 
-A lot of code has been cut and pasted into each Node-RED node to manage the current mechanism and much of this is unnecessarily asynchronous.
+A lot of code has been cut and pasted into each Node-RED node to manage the current mechanism and much of this is unnecessarily asynchronous. The cables refactor is an opportunity to address that.
 
 ## The proposal
 
@@ -97,10 +97,10 @@ This is a lower priority than other cable features and no dynaorse nodes yet sup
 
 ## Changes to redioactive
 
-* Redioactive gets a cable _database_ (Javascript object). The database is exposed through a simple REST API.
-* Funnels and valves can synchronously register each of the cables that they create in the database.
-* Valves and spouts can synchronously look up groups when initialising by flow identifier and Node-RED wire number and/or node instance identifier (tbd).
-* Communication with ledger becomes an optional feature that can be switched on and off, towards a plug in design that could work with different discovery & registration systems or different versions of the same specification.
+* Redioactive gets a cable _database_ (Javascript object). The database could be exposed through a simple REST API.
+* Funnels and valves can synchronously register each of the cables that they create in the database using the `makeCable` method.
+* Valves and spouts can asynchronously look up groups when initialising by flow identifier and Node-RED wire number using the `findCable` method.
+* Communication with ledger becomes an optional feature that can be enabled or disabled, towards a plug in design that could work with different discovery & registration systems or different versions of the same specification.
 
 ## Cable data structure
 
