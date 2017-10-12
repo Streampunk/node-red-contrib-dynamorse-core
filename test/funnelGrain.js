@@ -57,8 +57,8 @@ function makeVideoTags(width, height, packing, encodingName, interlace) {
     packing: packing,
     encodingName: encodingName,
     colorimetry: "BT709-2",
-    depth: 10,
-    sampling: 'YCbCr-4:2:2',
+    depth: 8,
+    sampling: 'YCbCr-4:2:0',
     interlace: interlace === 1,
     grainDuration: [1, 25]
   };
@@ -122,20 +122,9 @@ module.exports = function (RED) {
 
     var flowID = this.flowID();
     var sourceID = this.sourceID();
-
+    
     this.generator((push, next) => {
       if (this.count < +config.numPushes) {
-        if (0 === this.count) {
-          var nodeAPI = this.context().global.get('nodeAPI');
-          nodeAPI.getResource(flowID, 'flow', (err, f) => {
-            if (err) {
-              this.warn(`flowID ${flowID} not found in NMOS registry`);
-              this.wsMsg.send({'flowID': `flowID ${flowID} not found`});
-            } else
-              this.wsMsg.send({'flowID': 'flowID OK'});
-          });
-        }
-
         push(null, makeGrain(srcBuf, this.baseTime, flowID, sourceID));
         this.count++;
         setTimeout(next, +config.delay);
