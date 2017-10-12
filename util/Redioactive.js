@@ -180,9 +180,9 @@ function getNMOSCable (node, g) {
   .then(f => {
     var c = { };
     var t = makeDynamorseTags(f.tags);
-    c[t.format] = [ { tags: t, flowID: flow_id, sourceID: g.source_id } ];
-    c.backPressure = `${c[t.format]}[0]`;
-    return c;
+    c[t.format] = [ { tags: t, flowID: flow_id, sourceID: uuid.unparse(g.source_id) } ];
+    c.backPressure = `${t.format}[0]`;
+    return [c];
   });
 }
 
@@ -194,7 +194,7 @@ function findCable (g) {
       var cs = cabling[node.config.id].map(x => cables[x]);
       node.wsMsg.open().then(() => {
         node.wsMsg.send({"found": cs, "srcID": node.config.id, "srcType": node.config.type}); });
-      resolve(cs);
+        resolve(cs);
     } else {
       if (!pending[node.config.id]) pending[node.config.id] = [];
       pending[node.config.id].push(function() {
@@ -593,6 +593,7 @@ function Valve (config) {
     node.setStatus('green', 'dot', 'running');
   }
   this.getNMOSFlow = (grain, cb) => {
+    // console.trace('Using deprecated function Valve.getNMOSFlow');
     var nodeAPI = node.context().global.get('nodeAPI');
     var flow_id = require('uuid').unparse(grain.flow_id);
     nodeAPI.getResource(flow_id, 'flow', cb);
@@ -707,6 +708,7 @@ function Spout (config) {
     }
   });
   this.getNMOSFlow = (grain, cb) => {
+    // console.trace('Using deprecated function Spout.getNMOSFlow');
     var nodeAPI = node.context().global.get('nodeAPI');
     var flow_id = require('uuid').unparse(grain.flow_id);
     nodeAPI.getResource(flow_id, 'flow', cb);
