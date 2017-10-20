@@ -17,6 +17,7 @@ var SDP = require('../model/SDP.js');
 var url = require('url');
 var http = require('http');
 var fs = require('fs');
+var makeDynamorseTags = require('./LedgerDiscovery.js').makeDynamorseTags;
 
 var sdpToTags = function(sdp, config) {
   if (typeof sdp === 'string') {
@@ -109,9 +110,12 @@ var sdpToExt = function (sdp) {
 }
 
 var sdpURLReaderDynamorse = function (config, cb) {
-  return sdpURLReader(config, (err, v) => {
-    if (err) return cb(err);
-    cb(makeDynamorseTags(v));
+  sdpURLReader.call(this, config, (err, v) => {
+    if (err) cb(err);
+    else { 
+      this.tags = makeDynamorseTags(v);
+      cb(null, this.tags);
+    }
   });
 }
 

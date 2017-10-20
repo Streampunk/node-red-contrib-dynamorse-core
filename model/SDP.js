@@ -399,7 +399,7 @@ SDP.isSDP = function (x) {
  */
 SDP.makeSDP = function (connection, mediaType, exts, tsOffset) {
   function getParam(name) {
-    return (mediaType[name]) ? `${name}=${mediaType[name][0]}; ` : '';
+    return (mediaType[name]) ? `${name}=${mediaType[name]}; ` : '';
   }
   if (!connection && !mediaType && !exts)
     return new Error('Connection details, media type details and extension schema ' +
@@ -409,17 +409,17 @@ SDP.makeSDP = function (connection, mediaType, exts, tsOffset) {
   netif = typeof netif !== 'string' ?
     (typeof netif === 'object' ? netif.address : '127.0.0.1') : netif;
   tsOffset = typeof tsOffset === 'number' ? tsOffset >>> 0 : 0;
-  var fmtp = (mediaType.format[0] === 'video') ?
+  var fmtp = (mediaType.format === 'video') ?
     `a=fmtp:${connection.payloadType} ${getParam('sampling')}${getParam('width')}` +
     `${getParam('height')}${getParam('depth')}${getParam('colorimetry')}` +
-    `${getParam('interlace')}`.slice(0, -2) + '\n' : '';
-  var channels = (mediaType.format[0] === 'audio') ? `/${mediaType.channels[0]}` : '';
+    `${getParam('interlace')}`.slice(0, -2) + '\n  ' : '';
+  var channels = (mediaType.format === 'audio') ? `/${mediaType.channels}` : '';
   var ttl = Net.isMulticast(connection.address) ? `/${connection.ttl}` : '';
   var sdp = `v=0
   o=- ${dateNow} ${dateNow} IN IP4 ${netif}
   s=Dynamorse NMOS Stream
   t=0 0
-  m=${mediaType.format[0]} ${connection.port} RTP/AVP ${connection.payloadType}
+  m=${mediaType.format} ${connection.port} RTP/AVP ${connection.payloadType}
   c=IN IP4 ${connection.address}${ttl}
   a=source-filter:incl IN IP4 ${connection.address} ${netif}
   a=rtpmap:${connection.payloadType} ${mediaType.encodingName}/${mediaType.clockRate}${channels}
