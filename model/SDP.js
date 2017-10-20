@@ -367,7 +367,7 @@ SDP.prototype.getInterlace = function (i) {
   if (i >= this.m.length) return undefined;
   if (this.m[i].a !== undefined && Array.isArray(this.m[i].a.fmtp)) {
     var hm = this.m[i].a.fmtp[0].match(/.*interlace=([01]).*/);
-    if (hm) return +hm[1];
+    if (hm) return +hm[1]?true:false;
   }
   return undefined;
 }
@@ -399,7 +399,8 @@ SDP.isSDP = function (x) {
  */
 SDP.makeSDP = function (connection, mediaType, exts, tsOffset) {
   function getParam(name) {
-    return (mediaType[name]) ? `${name}=${mediaType[name]}; ` : '';
+    let tag = mediaType[name];
+    return tag ? `${name}=${('boolean'===typeof(tag))?(tag?'1':'0'):tag}; ` : '';
   }
   if (!connection && !mediaType && !exts)
     return new Error('Connection details, media type details and extension schema ' +

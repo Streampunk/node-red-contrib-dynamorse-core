@@ -132,16 +132,16 @@ var exts = {
   grain_duration_id: 9,
   ts_refclk: 'ptp=IEEE1588-2008:dd-a9-3e-5d-c7-28-28-dc' };
 var video_tags = {
-  encodingName: [ 'raw' ],
-  clockRate: [ '90000' ],
-  sampling: [ 'YCbCr-4:2:2' ],
-  width: [ '1920' ],
-  height: [ '1080' ],
-  depth: [ '10' ],
-  colorimetry: [ 'BT709-2' ],
-  interlace: [ '1' ],
-  packing: [ 'pgroup' ],
-  format: [ 'video' ] };
+  encodingName: 'raw',
+  clockRate: 90000,
+  sampling: 'YCbCr-4:2:2',
+  width: 1920,
+  height: 1080,
+  depth: 10,
+  colorimetry: 'BT709-2',
+  interlace: true,
+  packing: 'pgroup',
+  format: 'video' };
 var connection = { address: '225.6.7.8', port: 5001, ttl: 127, payloadType: 96 };
 var tsOffset = (Math.random() * 0xffffffff) >>> 0;
 
@@ -179,7 +179,7 @@ test('Creating a video SDP file', function (t) {
   });
   t.equal(sdp.getWidth(0), 1920, 'has the expected width.');
   t.equal(sdp.getHeight(0), 1080, 'has the expected height.');
-  t.equal(sdp.getInterlace(0), 1, 'has the expected interlace value.');
+  t.equal(sdp.getInterlace(0), true, 'has the expected interlace value.');
   t.equal(sdp.getColorimetry(0), 'BT709-2', 'has the expected colorimetry.');
   t.equal(sdp.getSampling(0), 'YCbCr-4:2:2', 'has the expected sampling.');
   t.equal(sdp.getDepth(0), 10, 'has the expected depth.');
@@ -187,10 +187,10 @@ test('Creating a video SDP file', function (t) {
 });
 
 var audio_tags = {
-  encodingName: [ "L24" ],
-  clockRate: [ "48000" ],
-  channels: [ "2" ],
-  format: [ "audio" ]
+  encodingName: 'L24',
+  clockRate: 48000,
+  channels: 2,
+  format: 'audio'
 };
 
 test('Creating an audio SDP file', function (t) {
