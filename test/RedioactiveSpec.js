@@ -15,14 +15,10 @@
 
 var TestUtil = require('dynamorse-test').TestUtil;
 
-var funnel1NodeId = "24fde3d7.b7544c";
-var funnel2NodeId = "7c968c40.836974";
-var funnel3NodeId = "6e6a8581.91957c";
-var funnel4NodeId = "333f72f.fccc08e";
-var funnel5NodeId = "b5383380.4ac7d";
-var funnel6NodeId = "70208d26.8fdf74";
-var valveNodeId = "634c3672.78be18";
-var spoutNodeId = "f2186999.7e5f78";
+var funnel1NodeId = '24fde3d7.b7544c';
+var funnel2NodeId = '7c968c40.836974';
+var valveNodeId = '634c3672.78be18';
+var spoutNodeId = 'f2186999.7e5f78';
 
 TestUtil.nodeRedTest('A video funnel->valve->spout flow is posted to Node-RED', {
   numPushes: 10,
@@ -30,12 +26,12 @@ TestUtil.nodeRedTest('A video funnel->valve->spout flow is posted to Node-RED', 
   valveMaxBuffer: 4,
   valveTimeout: 0,
   spoutTimeout: 0
-}, function getFlow(params) {
+}, params => {
   var testFlow = JSON.parse(TestUtil.testNodes.baseTestFlow);
   testFlow.nodes[0] = JSON.parse(TestUtil.testNodes.funnelGrainNode);
   testFlow.nodes[0].id = `${funnel1NodeId}`;
   testFlow.nodes[0].numPushes = params.numPushes;
-  testFlow.nodes[0].format = "video";
+  testFlow.nodes[0].format = 'video';
   testFlow.nodes[0].maxBuffer = params.funnelMaxBuffer;
   testFlow.nodes[0].wires[0][0] = `${valveNodeId}`;
 
@@ -49,7 +45,7 @@ TestUtil.nodeRedTest('A video funnel->valve->spout flow is posted to Node-RED', 
   testFlow.nodes[2].id = `${spoutNodeId}`;
   testFlow.nodes[2].timeout = params.spoutTimeout;
   return testFlow;
-}, function onMsg(t, params, msgObj, onEnd) {
+}, (t, params, msgObj, onEnd) => {
   //t.comment(`Message: ${JSON.stringify(msgObj)}`);
   if (msgObj.hasOwnProperty('receive')) {
     //t.equal(msgObj.receive, params.count, `received count ${params.count}`);
@@ -57,7 +53,7 @@ TestUtil.nodeRedTest('A video funnel->valve->spout flow is posted to Node-RED', 
     params.count++;
   }
   else if (msgObj.hasOwnProperty('end') && (msgObj.src === 'spout')) {
-    t.equal(params.count, params.numPushes, `received end after expected number of pushes`);
+    t.equal(params.count, params.numPushes, 'received end after expected number of pushes');
     onEnd();
   }
 });
@@ -66,7 +62,7 @@ TestUtil.nodeRedTest('A funnelx2->spout flow is posted to Node-RED', {
   numPushes: 10,
   funnelMaxBuffer: 10,
   spoutTimeout: 0
-}, function getFlow(params) {
+}, params => {
   params.funCurCount = [];
   params.funCurCount[0] = 0;
   params.funCurCount[1] = 0;
@@ -96,7 +92,7 @@ TestUtil.nodeRedTest('A funnelx2->spout flow is posted to Node-RED', {
   testFlow.nodes[2].timeout = params.spoutTimeout;
   testFlow.nodes[2].numStreams = 2;
   return testFlow;
-}, function onMsg(t, params, msgObj, onEnd) {
+}, (t, params, msgObj, onEnd) => {
   // t.comment(`Message: ${JSON.stringify(msgObj)}`);
   if (msgObj.hasOwnProperty('push') && (msgObj.src === 'funnel1')) {
     t.equal(msgObj.push, params.funCurCount[0], `received count ${params.funCurCount[0]}`);
@@ -112,7 +108,7 @@ TestUtil.nodeRedTest('A funnelx2->spout flow is posted to Node-RED', {
       params.count++;
   } else if (msgObj.hasOwnProperty('end') && (msgObj.src === 'spout') &&
              (params.funCurCount[0] == params.numPushes) && (params.funCurCount[1] == params.numPushes)) {
-    t.equal(params.count, params.numPushes, `received end after expected number of pushes`);
+    t.equal(params.count, params.numPushes, 'received end after expected number of pushes');
     onEnd();
   }
 });
@@ -121,12 +117,12 @@ TestUtil.nodeRedTest('An audio funnel->spout flow is posted to Node-RED', {
   numPushes: 10,
   funnelMaxBuffer: 10,
   spoutTimeout: 0
-}, function getFlow(params) {
+}, params => {
   var testFlow = JSON.parse(TestUtil.testNodes.baseTestFlow);
   testFlow.nodes[0] = JSON.parse(TestUtil.testNodes.funnelGrainNode);
   testFlow.nodes[0].id = `${funnel1NodeId}`;
   testFlow.nodes[0].numPushes = params.numPushes;
-  testFlow.nodes[0].format = "audio";
+  testFlow.nodes[0].format = 'audio';
   testFlow.nodes[0].maxBuffer = params.funnelMaxBuffer;
   testFlow.nodes[0].wires[0][0] = `${spoutNodeId}`;
 
@@ -134,7 +130,7 @@ TestUtil.nodeRedTest('An audio funnel->spout flow is posted to Node-RED', {
   testFlow.nodes[1].id = `${spoutNodeId}`;
   testFlow.nodes[1].timeout = params.spoutTimeout;
   return testFlow;
-}, function onMsg(t, params, msgObj, onEnd) {
+}, (t, params, msgObj, onEnd) => {
   // t.comment(`Message: ${JSON.stringify(msgObj)}`);
   if (msgObj.hasOwnProperty('receive')) {
     //t.equal(msgObj.receive, params.count, `received count ${params.count}`);
@@ -145,9 +141,9 @@ TestUtil.nodeRedTest('An audio funnel->spout flow is posted to Node-RED', {
     t.ok(Array.isArray(msgObj.made.audio) && msgObj.made.audio.length === 1,
       'logical cable made with audio array of length 1.');
     t.deepEqual(msgObj.made.audio[0].tags, {
-        format: "audio", channels: 2, clockRate: 48000, encodingName: "L16",
-        blockAlign: 2, grainDuration: [1, 25]},
-      'logical cable made with tags as expected.');
+      format: 'audio', channels: 2, clockRate: 48000, encodingName: 'L16',
+      blockAlign: 2, grainDuration: [1, 25]},
+    'logical cable made with tags as expected.');
     t.ok(msgObj.made.audio[0].flowID,
       'logical cable made with a flow ID.');
     t.ok(msgObj.made.audio[0].sourceID,
@@ -161,11 +157,11 @@ TestUtil.nodeRedTest('An audio funnel->spout flow is posted to Node-RED', {
       'logical cable found is itself and array of length 1.');
     t.ok(Array.isArray(msgObj.found[0].audio) &&
                             msgObj.found[0].audio.length === 1,
-      'logical cable found with audio array of length 1.');
+    'logical cable found with audio array of length 1.');
     t.deepEqual(msgObj.found[0].audio[0].tags, {
-        format: "audio", channels: 2, clockRate: 48000, encodingName: "L16",
-        blockAlign: 2, grainDuration: [1, 25]},
-      'logical cable found with tags as expected.');
+      format: 'audio', channels: 2, clockRate: 48000, encodingName: 'L16',
+      blockAlign: 2, grainDuration: [1, 25]},
+    'logical cable found with tags as expected.');
     t.ok(msgObj.found[0].audio[0].flowID,
       'logical cable found with a flow ID.');
     t.ok(msgObj.found[0].audio[0].sourceID,
@@ -174,7 +170,7 @@ TestUtil.nodeRedTest('An audio funnel->spout flow is posted to Node-RED', {
       'logical cable found with back pressure specified.');
   }
   else if (msgObj.hasOwnProperty('end') && (msgObj.src === 'spout')) {
-    t.equal(params.count, params.numPushes, `received end after expected number of pushes`);
+    t.equal(params.count, params.numPushes, 'received end after expected number of pushes');
     onEnd();
   }
 });

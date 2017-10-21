@@ -16,8 +16,6 @@
 // Reactive streams library for Node-RED nodes.
 
 var Queue = require('fastqueue');
-var dgram = require('dgram');
-var util = require('util');
 var H = require('highland');
 var webSock = require('./webSock.js').webSock;
 var ledgerReg = require('./LedgerDiscovery.js').register;
@@ -34,7 +32,7 @@ var isEnd = function (x) {
   return x !== null &&
     typeof x === 'object' &&
     x.constructor === End.prototype.constructor;
-}
+};
 var theEnd = new End;
 
 var setStatus = function (fill, shape, text) {
@@ -43,7 +41,7 @@ var setStatus = function (fill, shape, text) {
     this.status({ fill : fill, shape : shape, text: text});
     this.nodeStatus = text;
   }
-}
+};
 
 var nodeCount = 0;
 
@@ -57,13 +55,13 @@ webSockMsg.prototype.send = function(obj) {
   obj.src = this.src;
   if (this.ws)
     this.ws.send(this.node, obj);
-}
+};
 webSockMsg.prototype.open = function () {
   var self = this;
-  return new Promise(function (resolve, reject) {
+  return new Promise((resolve/*, reject*/) => {
     self.ws.open(() => { resolve(); });
   });
-}
+};
 
 function safeStatString (s) {
   // console.log('+++', s);
@@ -85,7 +83,7 @@ function clearCables() {
   cables = {};
   cabling = {};
   pending = {};
-};
+}
 
 var discovery = [];
 
@@ -99,7 +97,7 @@ function generateIDs (c) {
         else {
           x.flowID = uuid.v4();
           return x;
-        };
+        }
       });
       c[t] = c[t].map(x => {
         if (x.sourceID) { return x; }
@@ -141,7 +139,7 @@ function getID (idt, q) {
 function makeCable(flows) {
   if (Array.isArray(flows)) {
     if (flows.length > 0) {
-      this.warn(`makeCable passed an array of cables for node ${this.config.id} of type ${this.config.type}. Unpacking the first item only.`)
+      this.warn(`makeCable passed an array of cables for node ${this.config.id} of type ${this.config.type}. Unpacking the first item only.`);
       flows = flows[0];
     } else {
       return this.error('makeCable called with an empty array.');
@@ -153,7 +151,7 @@ function makeCable(flows) {
     this.log('Resetting cabling after re-deploy.');
     cabling = {};
     this.context().flow.set('flowResetFlag', true);
-  };
+  }
   this.config.wires[0].forEach(w => {
     if (cabling[w]) {
       if (cabling[w].indexOf(this.config.id) < 0)
@@ -161,14 +159,14 @@ function makeCable(flows) {
     } else {
       cabling[w] = [ this.config.id ];
     }
-    if (pending[w]) { pending[w].forEach(f => { f(); }); };
+    if (pending[w]) { pending[w].forEach(f => { f(); }); }
     delete pending[w];
   });
   discovery.forEach(f => {
     f(this, flows);
   });
   this.wsMsg.open().then(() => {
-    this.wsMsg.send({"made": flows, "srcID": this.config.id, "srcType": this.config.type}); });
+    this.wsMsg.send({'made': flows, 'srcID': this.config.id, 'srcType': this.config.type}); });
   return flows;
 }
 
@@ -177,50 +175,50 @@ function getNMOSCable (node, g) {
   var nodeAPI = node.context().global.get('nodeAPI');
   var flow_id = uuid.unparse(g.flow_id);
   return nodeAPI.getResource(flow_id, 'flow')
-  .then(f => {
-    var c = { };
-    var t = makeDynamorseTags(f.tags);
-    c[t.format] = [ { tags: t, flowID: flow_id, sourceID: uuid.unparse(g.source_id) } ];
-    c.backPressure = `${t.format}[0]`;
-    return [c];
-  });
+    .then(f => {
+      var c = { };
+      var t = makeDynamorseTags(f.tags);
+      c[t.format] = [ { tags: t, flowID: flow_id, sourceID: uuid.unparse(g.source_id) } ];
+      c.backPressure = `${t.format}[0]`;
+      return [c];
+    });
 }
 
 function findCable (g) {
   var node = this;
   var resolved = false;
-  return new Promise(function (resolve, reject) {
+  return new Promise((resolve, reject) => {
     if (cabling[node.config.id]) {
       var cs = cabling[node.config.id].map(x => cables[x]);
       node.wsMsg.open().then(() => {
-        node.wsMsg.send({"found": cs, "srcID": node.config.id, "srcType": node.config.type}); });
-        resolve(cs);
+        node.wsMsg.send({'found': cs, 'srcID': node.config.id, 'srcType': node.config.type}); });
+      resolve(cs);
     } else {
       if (!pending[node.config.id]) pending[node.config.id] = [];
-      pending[node.config.id].push(function() {
+      pending[node.config.id].push(() => {
         if (!resolved) {
           resolved = true;
           var cs = cabling[node.config.id].map(x => cables[x]);
           node.wsMsg.open().then(() => {
-            node.wsMsg.send({"found": cs, "srcID": node.config.id, "srcType": node.config.type}); });
+            node.wsMsg.send({'found': cs, 'srcID': node.config.id, 'srcType': node.config.type}); });
           resolve(cs);
-        };
+        }
       });
       getNMOSCable(node, g).then(cs => {
         if (!resolved) {
           resolved = true;
           node.wsMsg.open().then(() => {
-            node.wsMsg.send({"found": cs, "srcID": node.config.id, "srcType": node.config.type}); });
+            node.wsMsg.send({'found': cs, 'srcID': node.config.id, 'srcType': node.config.type}); });
           resolve(cs);
         }
-      }, e => {
+      }, () => {
         node.debug(`Did not resolve cable for ${node.id} via NMOS. Resolution via internal cable is pending.`);
       });
       setTimeout(() => {
         if (resolved === false)
           reject(`Unable to find input wire for node with ID ${node.config.id} of type ${node.config.type} within 2s.`);
       }, 2000);
-    };
+    }
   });
 }
 
@@ -237,7 +235,7 @@ function Funnel (config) {
   var wireCount = config.wires[0].length;
   var pending = config.wires[0];
   var node = this;
-  this.nodeStatus = "";
+  this.nodeStatus = '';
   this.setStatus = setStatus.bind(this);
   var workTimes = [];
   var paused = false;
@@ -262,7 +260,7 @@ function Funnel (config) {
     ws = new webSock(node, wsPort);
     this.context().global.set('ws', ws);
   }
-  this.wsMsg = new webSockMsg(node, ws, config.name||"funnel");
+  this.wsMsg = new webSockMsg(node, ws, config.name||'funnel');
 
   var pull = id => {
     node.log(`Pull received with id ${id}, queue length ${queue.length}, pending ${JSON.stringify(pending)}`);
@@ -271,15 +269,15 @@ function Funnel (config) {
       pending = [];
       var payload = queue.shift();
       if (!isEnd(payload))
-        node.wsMsg.send({"pull": payload});
+        node.wsMsg.send({'pull': payload});
       logger.send({ punkd: payload });
       if (isEnd(payload)) {
-        work = () => { }
+        work = () => { };
         next = () => {
           node.setStatus('grey', 'ring', 'done');
         };
         node.setStatus('grey', 'ring', 'done');
-      };
+      }
       node.send({
         payload : payload,
         error : null,
@@ -287,17 +285,17 @@ function Funnel (config) {
       });
     }
     if (paused && queue.length < 0.5 * maxBuffer) {
-      node.wsMsg.send({"resume": queue.length});
-      node.log("Resuming.");
+      node.wsMsg.send({'resume': queue.length});
+      node.log('Resuming.');
       paused = false;
       next();
-    };
+    }
   };
   var push = (err, val) => {
     if (err) {
       node.log(`Push received with error '${err}', queue length ${queue.length}, pending ${JSON.stringify(pending)}`);
       node.setStatus('red', 'dot', 'error');
-      node.wsMsg.send({"error": err});
+      node.wsMsg.send({'error': err});
       node.send({
         payload : null,
         error : err,
@@ -308,10 +306,10 @@ function Funnel (config) {
       if (queue.length <= maxBuffer) {
         // node.log(queue);
         if (!isEnd(val))
-          node.wsMsg.send({"push": val});
+          node.wsMsg.send({'push': val});
         queue.push(val);
       } else {
-        node.wsMsg.send({"drop": val});
+        node.wsMsg.send({'drop': val});
         node.warn(`Dropping value ${val} from buffer as maximum length of ${maxBuffer} exceeded.`);
       }
 
@@ -319,24 +317,24 @@ function Funnel (config) {
         var payload = queue.shift();
         node.log(`Sending ${payload} with pending ${JSON.stringify(pending)}.`);
         if (isEnd(val))
-          node.wsMsg.send({"end": 0});
+          node.wsMsg.send({'end': 0});
         else
-          node.wsMsg.send({"send": payload});
+          node.wsMsg.send({'send': payload});
         pending = [];
         logger.send({ punkd: payload });
         if (isEnd(payload)) {
-          work = () => { }
+          work = () => { };
           next = () => {
             node.setStatus('grey', 'ring', 'done');
           };
           node.setStatus('grey', 'ring', 'done');
-        };
+        }
         node.send({
           payload : payload,
           error : null,
           pull : pull
         });
-      };
+      }
       if (queue.length >= maxBuffer) {
         node.setStatus('red', 'dot', 'overflow');
       } else if (queue.length >= 0.75 * maxBuffer) {
@@ -348,7 +346,7 @@ function Funnel (config) {
   };
   this.eventMuncher = (emitter, event, map) => {
     emitter.on(event, function () {
-//      console.log('*** Received an event.');
+      // console.log('*** Received an event.');
       var value = (map) ? map.apply(null, arguments) : arguments[0];
       if (map && Array.isArray(value)) {
         value.forEach(v => push(null, v));
@@ -364,12 +362,12 @@ function Funnel (config) {
     setImmediate(() => {
       if (queue.length < 0.8 * maxBuffer) {
         workStart = process.hrtime();
-        node.wsMsg.send({"work": queue.length});
+        node.wsMsg.send({'work': queue.length});
         work(push, next);
       } else {
-        node.wsMsg.send({"pause": queue.length});
+        node.wsMsg.send({'pause': queue.length});
         paused = true;
-        node.log("Pausing.");
+        node.log('Pausing.');
       }
     });
   };
@@ -378,11 +376,10 @@ function Funnel (config) {
     work = cb;
     node.setStatus('green', 'dot', 'generating');
     ws.open(() => { next(); });
-  }
-  var highlandStream = null;
+  };
   this.highland = stream => {
     ws.open(() => {
-      highlandStream = stream.consume((err, x, hpush, hnext) => {
+      stream.consume((err, x, hpush, hnext) => {
         if (err) {
           push(err);
           hnext();
@@ -393,19 +390,19 @@ function Funnel (config) {
           push(null, x);
           workStart = process.hrtime();
           if (queue.length > 0.8 * maxBuffer) {
-            node.wsMsg.send({"pause": queue.length});
+            node.wsMsg.send({'pause': queue.length});
             paused = true;
             next = () => { node.log('Resuming highland.'); hnext(); };
-            node.log('Pausing highland.')
+            node.log('Pausing highland.');
           } else {
             hnext();
           }
         }
       })
-      .done(() => { push(null, theEnd); });
+        .done(() => { push(null, theEnd); });
     });
     node.setStatus('green', 'dot', 'generating');
-  }
+  };
   this.preFlightError = (e) => {
     node.error(`Preflight error: ${(e.message) ? e.message : e}.`);
     push(e);
@@ -413,7 +410,7 @@ function Funnel (config) {
     next = () => {
       node.setStatus('red', 'ring', 'preflight fail');
     };
-  }
+  };
   var configName = safeStatString(node.type + (nodeCount++));
   var nodeType = safeStatString(node.type);
   // Send stats every second
@@ -427,7 +424,7 @@ function Funnel (config) {
       redioactive: {
         host: hostname,
         pid: pid,
-        redioType: "funnel",
+        redioType: 'funnel',
         nodeType: nodeType,
         nodeName: configName,
         nodeID: node.id,
@@ -438,18 +435,18 @@ function Funnel (config) {
     };
     logger.send(msgObj);
   }, 1000);
-  this.close = done => { // done is undefined :-(
+  this.close = (/*done*/) => { // done is undefined :-(
     node.setStatus('yellow', 'ring', 'closing');
     next = () => {
       node.setStatus('grey', 'ring', 'closed');
-    }
+    };
     setTimeout(() => { clearInterval(metrics); }, 2000);
-  }
+  };
 }
 
 Funnel.prototype.makeCable = makeCable;
-Funnel.prototype.flowID = function (q) { return getID.call(this, 'flowID', q); }
-Funnel.prototype.sourceID = function (q) { return getID.call(this, 'sourceID', q); }
+Funnel.prototype.flowID = function (q) { return getID.call(this, 'flowID', q); };
+Funnel.prototype.sourceID = function (q) { return getID.call(this, 'sourceID', q); };
 
 function Valve (config) {
   var queue = new Queue;
@@ -467,10 +464,10 @@ function Valve (config) {
     ws = new webSock(node, wsPort);
     this.context().global.set('ws', ws);
   }
-  this.wsMsg = new webSockMsg(node, ws, config.name||"valve");
+  this.wsMsg = new webSockMsg(node, ws, config.name||'valve');
   this.config = config;
 
-  this.nodeStatus = "";
+  this.nodeStatus = '';
   this.setStatus = setStatus.bind(this);
   var workTimes = [];
   var paused = [];
@@ -494,7 +491,7 @@ function Valve (config) {
         };
         node.setStatus('grey', 'ring', 'done');
       } else
-        node.wsMsg.send({"pull": payload});
+        node.wsMsg.send({'pull': payload});
       node.send({
         payload : payload,
         error : null,
@@ -502,19 +499,19 @@ function Valve (config) {
       });
     }
     if (paused.length > 0 && queue.length < 0.5 * maxBuffer) {
-      node.wsMsg.send({"resume": queue.length});
-      node.log("Resuming.");
+      node.wsMsg.send({'resume': queue.length});
+      node.log('Resuming.');
       var resumePull = paused;
       paused = [];
       resumePull.forEach(p => {
         setImmediate(() => { p(node.id); }); });
-    };
+    }
   };
   var push = (err, val) => {
     if (err) {
       node.error(`Push received with error: '${err}'`);
       node.setStatus('red', 'dot', 'error');
-      node.wsMsg.send({"error": err});
+      node.wsMsg.send({'error': err});
       node.send({
         payload : null,
         error : err,
@@ -525,12 +522,12 @@ function Valve (config) {
       if (queue.length <= maxBuffer) {
       //  node.log(queue);
         if (isEnd(val))
-          node.wsMsg.send({"end": 0});
+          node.wsMsg.send({'end': 0});
         else
-          node.wsMsg.send({"push": val});
+          node.wsMsg.send({'push': val});
         queue.push(val);
       } else {
-        node.wsMsg.send({"drop": val});
+        node.wsMsg.send({'drop': val});
         node.warn(`Dropping value ${val} from buffer as maximum length of ${maxBuffer} exceeded.`);
       }
 
@@ -544,13 +541,13 @@ function Valve (config) {
             node.setStatus('grey', 'ring', 'done');
           };
           node.setStatus('grey', 'ring', 'done');
-        };
+        }
         node.send({
           payload : payload,
           error : null,
           pull : pull
         });
-      };
+      }
 
       if (queue.length > maxBuffer) {
         node.setStatus('red', 'dot', 'overflow');
@@ -570,16 +567,16 @@ function Valve (config) {
       workTimes.push(process.hrtime(startTime));
       if (queue.length > 0.8 * maxBuffer) {
         paused.push(msg.pull);
-        node.wsMsg.send({"pause": queue.length});
-        node.log("Pausing.");
+        node.wsMsg.send({'pause': queue.length});
+        node.log('Pausing.');
       } else {
-        setImmediate(() => { msg.pull(node.id) });
-      };
+        setImmediate(() => { msg.pull(node.id); });
+      }
     };
   };
   this.on('input', msg => {
     if (msg.error) {
-      node.wsMsg.send({"error": msg.error});
+      node.wsMsg.send({'error': msg.error});
       work(msg.error, null, push, next(msg));
     } else {
       work(null, msg.payload, push, next(msg));
@@ -591,13 +588,13 @@ function Valve (config) {
   this.consume = cb => {
     work = cb;
     node.setStatus('green', 'dot', 'running');
-  }
+  };
   this.getNMOSFlow = (grain, cb) => {
     // console.trace('Using deprecated function Valve.getNMOSFlow');
     var nodeAPI = node.context().global.get('nodeAPI');
     var flow_id = require('uuid').unparse(grain.flow_id);
     nodeAPI.getResource(flow_id, 'flow', cb);
-  }
+  };
   var configName = safeStatString(node.type + (nodeCount++));
   var nodeType = safeStatString(node.type);
   // Send stats every second
@@ -611,7 +608,7 @@ function Valve (config) {
       redioactive: {
         host: hostname,
         pid: pid,
-        redioType: "valve",
+        redioType: 'valve',
         nodeType: nodeType,
         nodeName: configName,
         nodeID: node.id,
@@ -622,19 +619,19 @@ function Valve (config) {
     };
     logger.send(msgObj);
   }, 1000);
-  this.close = done => { // done is undefined :-(
+  this.close = (/*done*/) => { // done is undefined :-(
     node.setStatus('yellow', 'ring', 'closing');
     next = () => {
       node.setStatus('grey', 'ring', 'closed');
-    }
+    };
     setTimeout(() => { clearInterval(metrics); }, 2000);
-  }
+  };
 }
 
 Valve.prototype.makeCable = makeCable;
 Valve.prototype.findCable = findCable;
-Valve.prototype.flowID = function (q) { return getID.call(this, 'flowID', q); }
-Valve.prototype.sourceID = function (q) { return getID.call(this, 'sourceID', q); }
+Valve.prototype.flowID = function (q) { return getID.call(this, 'flowID', q); };
+Valve.prototype.sourceID = function (q) { return getID.call(this, 'sourceID', q); };
 
 function Spout (config) {
   var node = this;
@@ -649,20 +646,20 @@ function Spout (config) {
     ws = new webSock(node, wsPort);
     this.context().global.set('ws', ws);
   }
-  this.wsMsg = new webSockMsg(node, ws, config.name||"spout");
+  this.wsMsg = new webSockMsg(node, ws, config.name||'spout');
   var numStreams = config.numStreams||1;
   var numEnds = 0;
   this.config = config;
 
   var eachFn = null;
   var doneFn = () => { };
-  var errorFn = (err, n) => { // Default error handler shuts the pipeline
-    node.wsMsg.send({"error": err});
+  var errorFn = (err) => { // Default error handler shuts the pipeline
+    node.wsMsg.send({'error': err});
     node.error(`Unhandled error: '${err}'.`);
     doneFn = () => { };
     eachFn = null;
-  }
-  this.nodeStatus = "";
+  };
+  this.nodeStatus = '';
   this.setStatus = setStatus.bind(this);
   node.setStatus('grey', 'ring', 'initialising');
   var workTimes = [];
@@ -672,7 +669,7 @@ function Spout (config) {
   };
   this.errors = ef => {
     errorFn = ef;
-  }
+  };
   this.done = f => {
     doneFn = f;
   };
@@ -681,7 +678,7 @@ function Spout (config) {
     return () => {
       workTimes.push(process.hrtime(startTime));
       setImmediate(() => {
-        node.wsMsg.send({"pull": node.id});
+        node.wsMsg.send({'pull': node.id});
         msg.pull(node.id);
       });
     };
@@ -693,7 +690,7 @@ function Spout (config) {
     } else if (isEnd(msg.payload)) {
       numEnds++;
       if (numEnds === numStreams) {
-        node.wsMsg.send({"end": 0});
+        node.wsMsg.send({'end': 0});
         node.setStatus('grey', 'ring', 'done');
         var execDone = doneFn;
         doneFn = () => { };
@@ -702,7 +699,7 @@ function Spout (config) {
       }
     } else {
       if (eachFn) {
-        node.wsMsg.send({"receive": msg.payload});
+        node.wsMsg.send({'receive': msg.payload});
         eachFn(msg.payload, next(msg));
       }
     }
@@ -712,7 +709,7 @@ function Spout (config) {
     var nodeAPI = node.context().global.get('nodeAPI');
     var flow_id = require('uuid').unparse(grain.flow_id);
     nodeAPI.getResource(flow_id, 'flow', cb);
-  }
+  };
 
   var configName = safeStatString(node.type + (nodeCount++));
   var nodeType = safeStatString(node.type);
@@ -727,7 +724,7 @@ function Spout (config) {
       redioactive: {
         host: hostname,
         pid: pid,
-        redioType: "spout",
+        redioType: 'spout',
         nodeType: nodeType,
         nodeName: configName,
         nodeID: node.id,
@@ -737,20 +734,20 @@ function Spout (config) {
     };
     logger.send(msgObj);
   }, 1000);
-  this.close = done => {
-    node.wsMsg.send({"close": 0});
+  this.close = (/*done*/) => {
+    node.wsMsg.send({'close': 0});
     if (ws) ws.close();
     ws = null;
     this.context().global.set('ws', null);
-    setTimeout(() => { clearInterval(metrics) }, 2000);
+    setTimeout(() => { clearInterval(metrics); }, 2000);
   };
   this.preFlightError = e => {
     node.error(`Preflight error: ${(e.message) ? e.message : e}.`);
     node.setStatus('red', 'ring', 'preflight fail');
     next = () => {
       node.setStatus('red', 'ring', 'preflight fail');
-    }
-  }
+    };
+  };
 }
 
 // Spouts can make cables when they are NMOS senders

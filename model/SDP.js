@@ -42,6 +42,7 @@ function SDP(sdp) {
  * @param [string] s String representation of the SDP file.
  */
 SDP.prototype.parse = function (s) {
+  let sdp = {};
   if (this === undefined || this === null || typeof this !== 'object') {
     sdp = {};
   } else {
@@ -50,7 +51,7 @@ SDP.prototype.parse = function (s) {
   var media = sdp;
   var sdpLines = s.split(/\r?\n/);
   sdpLines.forEach(l => {
-    var m = l.trim().match(/^([a-z])=(.*)$/)
+    const m = l.trim().match(/^([a-z])=(.*)$/);
     if (m !== null) {
       if (m[1] === 'm') {
         media = {};
@@ -59,7 +60,7 @@ SDP.prototype.parse = function (s) {
       }
       if (media[m[1]] === undefined) {
         if (m[1] === 'a') {
-          var n = m[2].match(/^([^\r\n:]+):?([^\r\n]+)$/);
+          const n = m[2].match(/^([^\r\n:]+):?([^\r\n]+)$/);
           if (n !== null) {
             media.a = {};
             media.a[n[1]] = (n[2] === undefined) ? null : [ n[2] ];
@@ -73,7 +74,7 @@ SDP.prototype.parse = function (s) {
         }
       } else {
         if (m[1] === 'a') {
-          var n = m[2].match(/^([^\r\n:]+):?([^\r\n]+)$/);
+          const n = m[2].match(/^([^\r\n:]+):?([^\r\n]+)$/);
           if (n !== null) {
             if (media.a[n[1]] === null || media.a[n[1]] === undefined) {
               media.a[n[1]] = [ n[2] ];
@@ -88,7 +89,7 @@ SDP.prototype.parse = function (s) {
     }
   });
   return sdp;
-}
+};
 
 /**
  * Array of media names available in the SDP file. The index of each
@@ -97,7 +98,7 @@ SDP.prototype.parse = function (s) {
  */
 SDP.prototype.getMediaHeaders = function () {
   return this.m.map(x => x.m);
-}
+};
 
 /**
  * If present, an object as hashmap to allow extension header
@@ -117,7 +118,7 @@ SDP.prototype.getExtMapReverse = function (i) {
     }
   });
   return revMap;
-}
+};
 
 var sessionOrder =
   [ 'v', 'o', 's', 'i', 'u', 'e', 'p', 'c', 'b', 't', 'r', 'z', 'k', 'a' ];
@@ -165,7 +166,7 @@ SDP.prototype.toString = function () {
     });
   });
   return sdp;
-}
+};
 
 SDP.prototype.getEncodingName = function (i) {
   if (i >= this.m.length) return undefined;
@@ -178,14 +179,14 @@ SDP.prototype.getEncodingName = function (i) {
     }
   }
   return undefined;
-}
+};
 
 SDP.prototype.getMedia = function (i) {
   if (i >= this.m.length) return undefined;
-  var m = this.m[i].m.match(/(\w+)\s.*/)
+  var m = this.m[i].m.match(/(\w+)\s.*/);
   if (m !== null) return m[1];
   else return undefined;
-}
+};
 
 SDP.prototype.getClockRate = function (i) {
   if (i >= this.m.length) return undefined;
@@ -198,7 +199,7 @@ SDP.prototype.getClockRate = function (i) {
     }
   }
   return undefined;
-}
+};
 
 // Returns number of audio channels for audio - needs converting to a number
 SDP.prototype.getEncodingParameters = function (i) {
@@ -213,59 +214,59 @@ SDP.prototype.getEncodingParameters = function (i) {
   }
   return undefined;
 
-}
+};
 
 SDP.prototype.getPort = function (i) {
   if (i >= this.m.length) return undefined;
   var pm = this.m[i].m.match(/\w+\s([0-9]+)\s.*/);
   if (pm !== null) return +pm[1];
   else return undefined;
-}
+};
 
 SDP.prototype.getPayloadType = function (i) {
   if (i >= this.m.length) return undefined;
   var pm = this.m[i].m.match(/\w+\s[0-9]+\s[^\s]+\s([0-9]+)/);
   if (pm !== null) return +pm[1];
   else return undefined;
-}
+};
 
 SDP.prototype.getConnectionAddress = function (i) {
   if (i >= this.m.length) return undefined;
   var c = (this.m[i].c !== undefined) ? this.m[i].c : this.c;
   if (c !== undefined) {
-    var cm = this.m[i].c.match(/\w+\s\w+\s([0-9\.]+).*/);
+    var cm = this.m[i].c.match(/\w+\s\w+\s([0-9.]+).*/);
     if (cm !== null) return cm[1];
     else return undefined;
   }
   return undefined;
-}
+};
 
 SDP.prototype.getConnectionTTL = function (i) {
   if (i >= this.m.length) return undefined;
   var c = (this.m[i].c !== undefined) ? this.m[i].c : this.c;
   if (c !== undefined) {
-    var cm = this.m[i].c.match(/\w+\s\w+\s[0-9\.]+\/([0-9]+).*/);
+    var cm = this.m[i].c.match(/\w+\s\w+\s[0-9.]+\/([0-9]+).*/);
     if (cm !== null) return +cm[1];
     else return undefined;
   }
   return undefined;
-}
+};
 
 SDP.prototype.getOriginUnicastAddress = function (i) {
   if (i >= this.m.length) return undefined;
-  var m = this.o.match(/[^\s]+[0-9]+\s[0-9]+\s\w+\s\w+\s([0-9\.]+).*/);
+  var m = this.o.match(/[^\s]+[0-9]+\s[0-9]+\s\w+\s\w+\s([0-9.]+).*/);
   if (m !== null) return m[1];
   else return undefined;
-}
+};
 
 SDP.prototype.getClockOffset = function (i) {
   if (i >= this.m.length) return undefined;
   if (this.m[i].a !== undefined && Array.isArray(this.m[i].a.mediaclk)) {
-    var om = this.m[i].a.mediaclk[0].match(/direct=([0-9]*).*/)
+    var om = this.m[i].a.mediaclk[0].match(/direct=([0-9]*).*/);
     if (om !== null) return +om[1];
   }
   return undefined;
-}
+};
 
 SDP.prototype.getTimestampReferenceClock = function (i) {
   if (i >= this.m.length) return undefined;
@@ -273,20 +274,20 @@ SDP.prototype.getTimestampReferenceClock = function (i) {
     return this.m[i].a['ts-refclk'][0];
   }
   return undefined;
-}
+};
 
 SDP.prototype.getSMPTETimecodeParameters = function (i) {
   if (i >= this.m.length) return undefined;
   if (this.m[i].a !== undefined && Array.isArray(this.m[i].a.extmap)) {
     var tcLine = this.m[i].a.extmap
-    .map(x => x.match(/[0-9][0-9]?\s+urn:ietf:params:rtp-hdrext:smpte-tc\s(\S+).*/))
-    .find(x => x !== null);
+      .map(x => x.match(/[0-9][0-9]?\s+urn:ietf:params:rtp-hdrext:smpte-tc\s(\S+).*/))
+      .find(x => x !== null);
     if (tcLine) {
       return tcLine[1];
     }
   }
   return undefined;
-}
+};
 
 /**
  * Calculates the number of bytes in an atomic unit of a grain to ensure that
@@ -303,9 +304,9 @@ SDP.prototype.getStride = function (i) {
   if (media.a.rtpmap[0].indexOf('raw') >= 0 && Array.isArray(media.a.fmtp)) {
     // a=fmtp:96 sampling=YCbCr-4:2:2; width=1920; height=1080; depth=10; colorimetry=BT709-2
     var fmtp = media.a.fmtp[0];
-    var wm = fmtp.match(/.*width=([0-9]+).*/)
-    var width = (wm) ? +wm[1] : 1920;
-    var dm = fmtp.match(/.*depth=([0-9]+).*/)
+    // var wm = fmtp.match(/.*width=([0-9]+).*/);
+    // var width = (wm) ? +wm[1] : 1920;
+    var dm = fmtp.match(/.*depth=([0-9]+).*/);
     var depth = (dm) ? +dm[1] : 8;
     var spp = (fmtp.indexOf('4:4:4') >= 0) ? 3 :
       ((fmtp.indexOf('4:2:2') >= 0) ? 2 : 1.5);
@@ -316,7 +317,7 @@ SDP.prototype.getStride = function (i) {
   } else {
     return 1;
   }
-}
+};
 
 SDP.prototype.getWidth = function (i) {
   if (i >= this.m.length) return undefined;
@@ -325,7 +326,7 @@ SDP.prototype.getWidth = function (i) {
     if (wm) return +wm[1];
   }
   return undefined;
-}
+};
 
 SDP.prototype.getHeight = function (i) {
   if (i >= this.m.length) return undefined;
@@ -334,7 +335,7 @@ SDP.prototype.getHeight = function (i) {
     if (hm) return +hm[1];
   }
   return undefined;
-}
+};
 
 SDP.prototype.getSampling = function (i) {
   if (i >= this.m.length) return undefined;
@@ -343,7 +344,7 @@ SDP.prototype.getSampling = function (i) {
     if (hm) return hm[1];
   }
   return undefined;
-}
+};
 
 SDP.prototype.getColorimetry = function (i) {
   if (i >= this.m.length) return undefined;
@@ -352,7 +353,7 @@ SDP.prototype.getColorimetry = function (i) {
     if (hm) return hm[1];
   }
   return undefined;
-}
+};
 
 SDP.prototype.getDepth = function(i) {
   if (i >= this.m.length) return undefined;
@@ -361,7 +362,7 @@ SDP.prototype.getDepth = function(i) {
     if (hm) return +hm[1];
   }
   return undefined;
-}
+};
 
 SDP.prototype.getInterlace = function (i) {
   if (i >= this.m.length) return undefined;
@@ -370,13 +371,13 @@ SDP.prototype.getInterlace = function (i) {
     if (hm) return +hm[1]?true:false;
   }
   return undefined;
-}
+};
 
 SDP.isSDP = function (x) {
   return x !== null &&
     typeof x === 'object' &&
     x.constructor === SDP.prototype.constructor;
-}
+};
 
 /**
  * Create an SDP file from connection, media type and extension schemd details.
@@ -432,8 +433,8 @@ SDP.makeSDP = function (connection, mediaType, exts, tsOffset) {
   a=extmap:${exts.grain_flags_id} urn:x-nmos:rtp-hdrext:grain-flags
   a=extmap:${exts.sync_timestamp_id} urn:x-nmos:rtp-hdrext:sync-timestamp
   a=extmap:${exts.grain_duration_id} urn:x-nmos:rtp-hdrext:grain-duration
-  a=ts-refclk:${exts.ts_refclk}`
+  a=ts-refclk:${exts.ts_refclk}`;
   return new SDP(sdp);
-}
+};
 
 module.exports = SDP;

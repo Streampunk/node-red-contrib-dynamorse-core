@@ -19,7 +19,7 @@ var test = require('tape');
 var exampleTCNonDrop = Buffer.from([0x01, 0x07, 0x04, 0x00, 0x04, 0x09, 0x09, 0x03]);
 var exampleTCDrop = Buffer.from([0x01, 0x00, 0x05, 0x00, 0x04, 0x08, 0x0e, 0x04]);
 
-test('Creating a timecode with a buffer', function (t) {
+test('Creating a timecode with a buffer', t => {
   var tcnd = new Timecode(exampleTCNonDrop);
   var tcd = new Timecode(exampleTCDrop);
   t.equal(tcnd.toString(), '17:40:49:13', 'matches non drop by string comparison.');
@@ -27,7 +27,7 @@ test('Creating a timecode with a buffer', function (t) {
   t.end();
 });
 
-test('Creating a timecode with a string', function (t) {
+test('Creating a timecode with a string', t => {
   var tcnd = new Timecode('17:40:49:13');
   var tcd = new Timecode('10:50:48;24');
   t.deepEqual(tcnd.buffer, exampleTCNonDrop, 'matches non drop by buffer comparison.');
@@ -35,7 +35,7 @@ test('Creating a timecode with a string', function (t) {
   t.end();
 });
 
-test('Creating a timecode with arguments', function (t) {
+test('Creating a timecode with arguments', t => {
   var tcnd = new Timecode(17, 40, 49, 13, false, true);
   var tcd = new Timecode(10, 50, 48, 24, true);
   t.equal(tcnd.toString(), '17:40:49:13', 'matches non drop by string comparison.');

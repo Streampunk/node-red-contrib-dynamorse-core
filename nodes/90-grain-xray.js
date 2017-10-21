@@ -33,7 +33,7 @@ module.exports = function (RED) {
         }, true);
         if (config.toConsole === true)
           node.log(formattedCable);
-      };
+      }
     });
     this.consume((err, x, push, next) => {
       if (err) {
@@ -59,5 +59,5 @@ module.exports = function (RED) {
     });
   }
   util.inherits(GrainDebug, redioactive.Valve);
-  RED.nodes.registerType("grain-xray", GrainDebug);
-}
+  RED.nodes.registerType('grain-xray', GrainDebug);
+};

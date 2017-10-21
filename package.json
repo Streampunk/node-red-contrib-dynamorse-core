@@ -12,15 +12,20 @@
     "highland": "^2.11.1",
     "seamless-immutable": "^7.1.2",
     "uuid": "^2.0.1",
-    "ws": "^2.1.0",
+    "ws": "^3.2.0",
     "nmos-ledger": "^1.0.18"
   },
   "devDependencies": {
-    "dynamorse-test": "^0.1.1"
+    "dynamorse-test": "^0.1.1",
+    "eslint": "^4.9.0",
+    "tape": "^4.8.0"
   },
   "scripts": {
     "test": "tape test/*Spec.js",
-    "postinstall": "node scripts/dynamorse-setup.js"
+    "postinstall": "node scripts/dynamorse-setup.js",
+    "lint": "eslint **/*.js",
+    "lint-html": "eslint **/*.js -f html -o ./reports/lint-results.html",
+    "lint-fix": "eslint --fix **/*.js"
   },
   "node-red": {
     "nodes": {

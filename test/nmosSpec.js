@@ -20,8 +20,8 @@ var ntags = {
   format : [ 'video' ],
   encodingName : [ 'raw' ],
   width : [ '1920' ],
-  height : [ `1080` ],
-  depth : [ `10` ],
+  height : [ '1080' ],
+  depth : [ '10' ],
   packing : [ 'v210' ],
   sampling : [ 'YCbCr-4:2:2' ],
   clockRate : [ '90000' ],
@@ -64,7 +64,7 @@ test('Converting NMOS tags to dynamorse tags', t => {
   Object.keys(d).forEach(k => {
     t.ok(!Array.isArray(d[k]) ||
         (d[k].length === 2 && typeof d[k][0] === 'number' && typeof d[k][1] === 'number'),
-      `property ${k} is unwrapped from an array.`);
+    `property ${k} is unwrapped from an array.`);
   });
   t.end();
 });

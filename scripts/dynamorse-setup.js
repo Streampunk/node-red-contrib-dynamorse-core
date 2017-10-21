@@ -26,23 +26,23 @@ var selfNodeID = 'd8044477.27fbb8';
 function setupDynamorseTab() {
   var dynamorseTab = `[
     {
-      "id": "${dynamorseTabID}",
-      "type": "tab",
-      "label": "Dynamorse"
+      'id': '${dynamorseTabID}',
+      'type': 'tab',
+      'label': 'Dynamorse'
     },
     {
-      "id": "${dynamorseCommentID}",
-      "type": "comment",
-      "name": "Streampunk Media",
-      "info": "Design and deploy professional media workflows with [_Dynamorse_](https://github.com/Streampunk/dynamorse/blob/master/README.md).\\n\\nFor support, development or further information, please e-mail [Streampunk Media Ltd](http://www.streampunk.media) on [furnace@streampunk.media](mailto: furnace@streampunk.media).\\n\\nDynamorse depends on [codecadon](https://github.com/Streampunk/codecadon) that incorprates binaries compiled from unmodified [LGPL v3 licensed code](https://github.com/Streampunk/codecadon/tree/master/licenses) from the FFMPEG project.",
-      "x": 122,
-      "y": 45,
-      "z": "${dynamorseTabID}",
-      "wires": []
+      'id': '${dynamorseCommentID}',
+      'type': 'comment',
+      'name': 'Streampunk Media',
+      'info': 'Design and deploy professional media workflows with [_Dynamorse_](https://github.com/Streampunk/dynamorse/blob/master/README.md).\\n\\nFor support, development or further information, please e-mail [Streampunk Media Ltd](http://www.streampunk.media) on [furnace@streampunk.media](mailto: furnace@streampunk.media).\\n\\nDynamorse depends on [codecadon](https://github.com/Streampunk/codecadon) that incorprates binaries compiled from unmodified [LGPL v3 licensed code](https://github.com/Streampunk/codecadon/tree/master/licenses) from the FFMPEG project.',
+      'x': 122,
+      'y': 45,
+      'z': '${dynamorseTabID}',
+      'wires': []
     },
     {
-      "id": "${selfNodeID}",
-      "type": "self"
+      'id': '${selfNodeID}',
+      'type': 'self'
     }
   ]`;
 
@@ -55,21 +55,21 @@ function setupDynamorseTab() {
       'Content-Type' : 'application/json',
       'Content-Length' : dynamorseTab.length
     }
-  }, function (res) {
+  }, res => {
     res.setEncoding('utf8');
-    res.on('data', function (chunk) {
+    res.on('data', (/*chunk*/) => {
     });
-    res.on('end', function () {
-      console.log(" - restart Node-RED to complete dynamorse configuration");
+    res.on('end', () => {
+      console.log(' - restart Node-RED to complete dynamorse configuration');
     });
-  }).on('error', function (e) {
+  }).on('error', e => {
     console.log(` - problem with dynamorse tab request: ${e.message}`);
-    console.log("   - run dynamorse-setup.exe once Node-RED is started to configure dynamorse")
+    console.log('   - run dynamorse-setup.exe once Node-RED is started to configure dynamorse');
   });
 
   dynamorseTabReq.write(dynamorseTab);
   dynamorseTabReq.end();
 }
 
-console.log("Setting up Dynamorse Tab");
+console.log('Setting up Dynamorse Tab');
 setupDynamorseTab();

@@ -20,11 +20,13 @@ module.exports = function (RED) {
   function ValveTest (config) {
     RED.nodes.createNode(this, config);
     redioactive.Valve.call(this, config);
-    this.findCable().then(c => {
-      this.log(`Details of input cable(s) is/are:\n${JSON.stringify(c, null, 2)}`);
-      this.makeCable(c[0]);
-    }, e => { this.warn(e); });
-    this.consume(function (err, x, push, next) {
+    this.findCable()
+      .then(c => {
+        this.log(`Details of input cable(s) is/are:\n${JSON.stringify(c, null, 2)}`);
+        return this.makeCable(c[0]);
+      })
+      .catch(e => this.warn(e));
+    this.consume((err, x, push, next) => {
       if (err) {
         push(err);
       } else if (x === redioactive.end) {
@@ -38,5 +40,5 @@ module.exports = function (RED) {
   }
 
   util.inherits(ValveTest, redioactive.Valve);
-  RED.nodes.registerType("valveTest", ValveTest);
-}
+  RED.nodes.registerType('valveTest', ValveTest);
+};

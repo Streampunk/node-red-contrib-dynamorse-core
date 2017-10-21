@@ -17,8 +17,8 @@ module.exports = function(RED) {
   function Device (config) {
     RED.nodes.createNode(this, config);
     var globalContext = RED.settings.functionGlobalContext;
-    var type = config.nmos_type.substr(config.nmos_type.lastIndexOf(":")+1);
-    this.nmos_id = (type === "generic") ? globalContext.get("genericID") : globalContext.get("pipelinesID");
+    var type = config.nmos_type.substr(config.nmos_type.lastIndexOf(':')+1);
+    this.nmos_id = (type === 'generic') ? globalContext.get('genericID') : globalContext.get('pipelinesID');
   }
-  RED.nodes.registerType("device", Device);
-}
+  RED.nodes.registerType('device', Device);
+};

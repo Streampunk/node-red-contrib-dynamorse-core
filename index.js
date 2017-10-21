@@ -14,9 +14,9 @@
 */
 
 module.exports = {
-   Redioactive : require('./util/Redioactive.js'),
-   Timecode : require('./model/Timecode.js'),
-   Grain : require('./model/Grain.js'),
-   SDPProcessing : require('./util/SDPProcessing.js'),
-   Net : require('./util/Net.js')
+  Redioactive : require('./util/Redioactive.js'),
+  Timecode : require('./model/Timecode.js'),
+  Grain : require('./model/Grain.js'),
+  SDPProcessing : require('./util/SDPProcessing.js'),
+  Net : require('./util/Net.js')
 };

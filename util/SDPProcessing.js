@@ -42,7 +42,7 @@ var sdpToTags = function(sdp, config) {
   this.sdpToExt(sdp);
   this.sdp = sdp;
   return this.tags;
-}
+};
 
 var setTag = function (name, sdp, valueFn, config) {
   if (!name) return;
@@ -63,7 +63,7 @@ var setTag = function (name, sdp, valueFn, config) {
   } else {
     this.warn(`Cannot set property ${name} because value is of unsupported type ${typeof value}.`);
   }
-}
+};
 
 var sdpURLReader = function (config, cb) {
   var self = this;
@@ -74,7 +74,7 @@ var sdpURLReader = function (config, cb) {
   if (sdpDetails.protocol.startsWith('file')) {
     return fs.readFile(sdpDetails.path, 'utf8', (err, data) => {
       if (err) return cb(err);
-      else return cb(null, self.sdpToTags(data, config), sdp);
+      else return cb(null, self.sdpToTags(data, config));
     });
   } else if (sdpDetails.protocol.startsWith('http:')) {
     http.get(sdpDetails.href, (res) => {
@@ -85,13 +85,13 @@ var sdpURLReader = function (config, cb) {
       res.on('data', data => { sdpData += data; });
       res.on('end', () => {
         console.log('*** Aggregated SDP', sdpData);
-        cb(null, self.sdpToTags(sdpData, config), sdp);
+        cb(null, self.sdpToTags(sdpData, config));
       });
     });
   } else {
     cb(new Error('Cannot read an SDP file with protocols other than http or file.'));
   }
-}
+};
 
 var sdpToExt = function (sdp) {
   if (!SDP.isSDP(sdp)) return;
@@ -107,7 +107,7 @@ var sdpToExt = function (sdp) {
   this.exts.ts_refclk = sdp.getTimestampReferenceClock(0);
   this.exts.smpte_tc_param = sdp.getSMPTETimecodeParameters(0);
   return this.exts;
-}
+};
 
 var sdpURLReaderDynamorse = function (config, cb) {
   sdpURLReader.call(this, config, (err, v) => {
@@ -117,7 +117,7 @@ var sdpURLReaderDynamorse = function (config, cb) {
       cb(null, this.tags);
     }
   });
-}
+};
 
 module.exports = {
   sdpToTags : sdpToTags,

@@ -15,14 +15,14 @@
 
 var getFirstRealIP4Interface = function() {
   var ifaces = require('os').networkInterfaces();
-  var bumpy =  Object.keys(ifaces).map(function (iname) {
-    var iface = ifaces[iname]; return iface.map(function (x) {
+  var bumpy =  Object.keys(ifaces).map(iname => {
+    var iface = ifaces[iname]; return iface.map(x => {
       x.ifname = iname; return x;
     });
   });
   var flatter = Array.prototype.concat.apply([], bumpy);
-  return flatter.find(function (x) { return x.family === 'IPv4' && !x.internal; });
-}
+  return flatter.find(x => { return x.family === 'IPv4' && !x.internal; });
+};
 
 var isMulticast = function (addr) {
   var check = addr.match(/([0-2]?[0-9]?[0-9])\./);
@@ -30,7 +30,7 @@ var isMulticast = function (addr) {
     return +check[1] >= 224 && +check[1] <= 239;
   }
   return false;
-}
+};
 
 module.exports = {
   getFirstRealIP4Interface : getFirstRealIP4Interface,

@@ -16,7 +16,6 @@
 var util = require('util');
 var redioactive = require('../util/Redioactive.js');
 var Grain = require('../model/Grain.js');
-var uuid = require('uuid');
 
 function make420PBuf(width, height) {
   var lumaPitchBytes = width;
@@ -51,12 +50,12 @@ function make420PBuf(width, height) {
 
 function makeVideoTags(width, height, packing, encodingName, interlace) {
   var tags = {
-    format : "video",
+    format : 'video',
     width: width,
     height: height,
     packing: packing,
     encodingName: encodingName,
-    colorimetry: "BT709-2",
+    colorimetry: 'BT709-2',
     depth: 8,
     sampling: 'YCbCr-4:2:0',
     interlace: interlace === 1,
@@ -77,7 +76,7 @@ function makeAudioBuf(channels, bitsPerSample, duration) {
 
 function makeAudioTags(channels, bitsPerSample) {
   var tags = {
-    format: "audio",
+    format: 'audio',
     channels: channels,
     clockRate: 48000,
     encodingName: `L${bitsPerSample}`,
@@ -109,7 +108,6 @@ module.exports = function (RED) {
         flowId, sourceId, grainDuration);
     }
 
-    var firstGrain = false;
     this.count = 0;
     var tags = (config.format === 'video') ?
       makeVideoTags(+config.width, +config.height, '420P', 'raw', 0) :
@@ -117,8 +115,8 @@ module.exports = function (RED) {
     this.baseTime = [ Date.now() / 1000|0, (Date.now() % 1000) * 1000000 ];
 
     this.makeCable((config.format === 'video') ?
-      { video: [ { tags: tags } ], backPressure: "video[0]" } :
-      { audio: [ { tags: tags } ], backPressure: "audio[0]" });
+      { video: [ { tags: tags } ], backPressure: 'video[0]' } :
+      { audio: [ { tags: tags } ], backPressure: 'audio[0]' });
 
     var flowID = this.flowID();
     var sourceID = this.sourceID();
@@ -136,5 +134,5 @@ module.exports = function (RED) {
   }
 
   util.inherits(FunnelGrain, redioactive.Funnel);
-  RED.nodes.registerType("funnelGrain", FunnelGrain);
+  RED.nodes.registerType('funnelGrain', FunnelGrain);
 };

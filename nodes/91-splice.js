@@ -20,5 +20,5 @@ module.exports = function (RED) {
     RED.nodes.createNode(this, config);
     redioactive.Valve.call(this, config);
   }
-  RED.nodes.registerType("splice", Splice);
-}
+  RED.nodes.registerType('splice', Splice);
+};

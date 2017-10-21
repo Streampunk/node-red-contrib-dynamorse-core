@@ -15,7 +15,6 @@
 
 var util = require('util');
 var redioactive = require('../util/Redioactive.js');
-var Grain = require('../model/Grain.js');
 
 module.exports = function (RED) {
   function TestSpout (config) {
@@ -25,17 +24,18 @@ module.exports = function (RED) {
     this.each((x, next) => {
       this.log(`Received ${util.inspect(x)}.`);
 
-      var nextJob = cableChecked ? Promise.resolve(x) :
-      this.findCable(x)
-      .then(c => {
-        this.log(`Details of input cable(s) is/are:\n${JSON.stringify(c, null, 2)}`);
-      }, e => { this.warn(e); });
+      var nextJob = cableChecked ? 
+        Promise.resolve(x) :
+        this.findCable(x)
+          .then(c => {
+            this.log(`Details of input cable(s) is/are:\n${JSON.stringify(c, null, 2)}`);
+          }, e => { this.warn(e); });
       cableChecked = true;
 
       nextJob.then(() => {
         if (config.timeout === 0) setImmediate(next);
         else setTimeout(next, config.timeout);
-      })
+      });
     });
     this.errors((e, next) => {
       this.warn(`Received unhandled error: ${e.message}.`);
@@ -47,5 +47,5 @@ module.exports = function (RED) {
     });
   }
   util.inherits(TestSpout, redioactive.Spout);
-  RED.nodes.registerType("spoutTest", TestSpout);
-}
+  RED.nodes.registerType('spoutTest', TestSpout);
+};

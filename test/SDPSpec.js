@@ -35,7 +35,7 @@ a=extmap:7 urn:x-nmos:rtp-hdrext:sync-timestamp
 a=extmap:9 urn:x-nmos:rtp-hdrext:grain-duration
 a=ts-refclk:ptp=IEEE1588-2008:ec-46-70-ff-fe-00-42-c4`;
 
-test('An audio SDP file is parsed', function (t) {
+test('An audio SDP file is parsed', t => {
   var sdp = new SDP(audioSDP);
   // console.log(JSON.stringify(sdp, null, 2));
   t.deepEqual(sdp.getMediaHeaders(), [ 'audio 5000 RTP/AVP 96'] );
@@ -65,7 +65,7 @@ a=extmap:7 urn:x-nmos:rtp-hdrext:sync-timestamp
 a=extmap:9 urn:x-nmos:rtp-hdrext:grain-duration
 a=ts-refclk:ptp=IEEE1588-2008:ec-46-70-ff-fe-00-42-c4`;
 
-test('A video SDP file is parsed', function(t) {
+test('A video SDP file is parsed', t => {
   var sdp = new SDP(videoSDP);
   // console.log(JSON.stringify(sdp, null, 2));
   t.deepEqual(sdp.getMediaHeaders(), [ 'video 5000 RTP/AVP 96' ],
@@ -108,7 +108,7 @@ a=extmap:10 urn:x-nmos:rtp-hdrext:source-id
 a=extmap:11 urn:x-nmos:rtp-hdrext:grain-flags
 a=extmap:12 urn:x-nmos:rtp-hdrext:grain-duration`;
 
-test('A mixed SDP file is parsed', function (t) {
+test('A mixed SDP file is parsed', t => {
   var sdp = new SDP(mixedSDP);
   t.deepEqual(sdp.getMediaHeaders(),
     [ 'video 5004 RTP/AVP 98', 'audio 5006 RTP/AVP 99' ],
@@ -145,7 +145,7 @@ var video_tags = {
 var connection = { address: '225.6.7.8', port: 5001, ttl: 127, payloadType: 96 };
 var tsOffset = (Math.random() * 0xffffffff) >>> 0;
 
-test('Creating a video SDP file', function (t) {
+test('Creating a video SDP file', t => {
   var sdp = SDP.makeSDP(connection, video_tags, exts, tsOffset);
   t.ok(SDP.isSDP(sdp), 'is an SDP object.');
   t.ok(/-\s[0-9]+\s[0-9]+\sIN\sIP4\s([0-2]?[0-9]?[0-9]\.){3}([0-2]?[0-9]?[0-9])/.test(sdp.o),
@@ -168,14 +168,14 @@ test('Creating a video SDP file', function (t) {
     'has the expected timestamp reference clock.');
   t.equal(sdp.getSMPTETimecodeParameters(0), '3600@90000/25', 'has the expected timecode parameters.');
   var extMap = sdp.getExtMapReverse(0);
-  Object.keys(exts).forEach(function (k) {
+  Object.keys(exts).forEach(k => {
     if (k.endsWith('_id')) {
       var j = k.slice(0, -3).replace(/_/, '-');
       t.ok(Object.keys(extMap).some(x => x.indexOf(j) >= 0),
         `extension map contains a key including ${j}.`);
       t.equal(extMap[Object.keys(extMap).find(x => x.indexOf(j) >= 0)],
         exts[k], `extension map has expected value for ${j}.`);
-    };
+    }
   });
   t.equal(sdp.getWidth(0), 1920, 'has the expected width.');
   t.equal(sdp.getHeight(0), 1080, 'has the expected height.');
@@ -193,7 +193,7 @@ var audio_tags = {
   format: 'audio'
 };
 
-test('Creating an audio SDP file', function (t) {
+test('Creating an audio SDP file', t => {
   connection = { address: '225.6.7.8', port: 5001, ttl: 127, payloadType: 96,
     netif: '192.192.192.192' };
   var sdp = SDP.makeSDP(connection, audio_tags, exts, tsOffset);
@@ -218,14 +218,14 @@ test('Creating an audio SDP file', function (t) {
     'has the expected timestamp reference clock.');
   t.equal(sdp.getSMPTETimecodeParameters(0), '3600@90000/25', 'has the expected timecode parameters.');
   var extMap = sdp.getExtMapReverse(0);
-  Object.keys(exts).forEach(function (k) {
+  Object.keys(exts).forEach(k => {
     if (k.endsWith('_id')) {
       var j = k.slice(0, -3).replace(/_/, '-');
       t.ok(Object.keys(extMap).some(x => x.indexOf(j) >= 0),
         `extension map contains a key including ${j}.`);
       t.equal(extMap[Object.keys(extMap).find(x => x.indexOf(j) >= 0)],
         exts[k], `extension map has expected value for ${j}.`);
-    };
+    }
   });
   t.equal(sdp.getWidth(0), undefined, 'has undefined width.');
   t.equal(sdp.getHeight(0), undefined, 'has undefined height.');
@@ -236,7 +236,7 @@ test('Creating an audio SDP file', function (t) {
   t.end();
 });
 
-test('Create SDP with unicast address', function (t) {
+test('Create SDP with unicast address', t => {
   var uniConn = { address: '10.11.12.13', port: 5001, ttl : 7, payloadType: 96,
     netif: '192.192.192.192' };
   var sdp = SDP.makeSDP(uniConn, audio_tags, exts, tsOffset);

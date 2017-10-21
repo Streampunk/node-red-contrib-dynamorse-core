@@ -17,13 +17,13 @@ module.exports = function(RED) {
   function RtpExt (config) {
     RED.nodes.createNode(this, config);
 
-    this.getConfig = function () { return config; }
+    this.getConfig = function () { return config; };
 
     var globalContext = RED.settings.functionGlobalContext;
-    globalContext.set("rtp_ext_id", this.id);
+    globalContext.set('rtp_ext_id', this.id);
 
     // This is the final global config node - set updated flag 
-    globalContext.set("updated", true);
+    globalContext.set('updated', true);
   }
-  RED.nodes.registerType("rtp-ext", RtpExt);
-}
+  RED.nodes.registerType('rtp-ext', RtpExt);
+};

@@ -14,7 +14,7 @@
 */
 
 var util = require('util');
-var redioactive = require('../util/Redioactive.js')
+var redioactive = require('../util/Redioactive.js');
 var H = require('highland');
 
 function inlet(config) {
@@ -46,5 +46,5 @@ module.exports = function (RED) {
   }
 
   util.inherits(FunnelCount, redioactive.Funnel);
-  RED.nodes.registerType("funnelCount", FunnelCount);
+  RED.nodes.registerType('funnelCount', FunnelCount);
 };

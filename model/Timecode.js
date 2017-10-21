@@ -13,12 +13,12 @@
   limitations under the License.
 */
 
-var immutable = require('seamless-immutable');
+// var immutable = require('seamless-immutable');
 
 function Timecode (bufferHourString, mins, secs, frames, drop, color) {
   if (Buffer.isBuffer(bufferHourString)) {
     if (bufferHourString.length < 8) {
-      this.buffer = Buffer.concat([Buffer.alloc(8-t.length), bufferHourString], 8);
+      this.buffer = Buffer.concat([Buffer.alloc(8-bufferHourString.length), bufferHourString], 8);
     } else {
       this.buffer = bufferHourString.slice(-8);
     }
@@ -64,6 +64,6 @@ Timecode.prototype.toString = function () {
   var drop = (this.buffer[6] & 0x04) !== 0;
   return padInt(hours) + ':' + padInt(mins) + ':' + padInt(secs) +
     (drop ? ';' : ':') + padInt(frames);
-}
+};
 
 module.exports = Timecode;

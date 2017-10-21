@@ -14,7 +14,6 @@
 */
 
 var Grain = require('../model/Grain.js');
-var Timecode = require('../model/Timecode.js');
 var test = require('tape');
 
 test('A newly created grain from mainly strings', t => {

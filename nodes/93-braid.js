@@ -20,5 +20,5 @@ module.exports = function (RED) {
     RED.nodes.createNode(this, config);
     redioactive.Valve.call(this, config);
   }
-  RED.nodes.registerType("braid", Braid);
-}
+  RED.nodes.registerType('braid', Braid);
+};

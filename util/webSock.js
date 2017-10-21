@@ -30,7 +30,7 @@ webSock.prototype.open = function(cb) {
   } else {
     cb();
   }
-}
+};
 
 webSock.prototype.send = function(node, obj) {
   if (this.socket) {
@@ -39,12 +39,12 @@ webSock.prototype.send = function(node, obj) {
     else
       node.warn(`web socket not open when sending '${JSON.stringify(obj, null, 2)}'`);
   }
-}
+};
 
 webSock.prototype.close = function() {
   if (this.socket && (this.socket.readyState === WebSocket.OPEN))
     this.socket.close();
-}
+};
 
 module.exports = {
   webSock: webSock
