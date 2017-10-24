@@ -90,59 +90,59 @@ function setupGlobalFlow() {
         res.on('end', () => {
           var devices = JSON.parse(devicesData);
           var globalFlow = `{
-            'id': 'global',
-            'configs': [
+            "id": "global",
+            "configs": [
             {
-              'id': '${selfNodeID}',
-              'type': 'self',
-              'nmos_id': '${self.id}',
-              'version': '${self.version}',
-              'nmos_label': '${self.label}',
-              'href': '${self.href}',
-              'hostname': '${self.hostname}',
-              'logHostname': '${properties.logHostname}',
-              'logPort': ${properties.logPort},
-              'ledgerPort': '${properties.ledgerPort}'
+              "id": "${selfNodeID}",
+              "type": "self",
+              "nmos_id": "${self.id}",
+              "version": "${self.version}",
+              "nmos_label": "${self.label}",
+              "href": "${self.href}",
+              "hostname": "${self.hostname}",
+              "logHostname": "${properties.logHostname}",
+              "logPort": ${properties.logPort},
+              "ledgerPort": "${properties.ledgerPort}"
             },
             {
-              'id': '${deviceNodeID}',
-              'type': 'device',
-              'nmos_id': '${devices[0].id}',
-              'version': '${devices[0].version}',
-              'nmos_type': '${devices[0].type}',
-              'nmos_label': '${devices[0].label}',
-              'node_id': '${devices[0].node_id}',
-              'node_ref': '${selfNodeID}',
-              'senders': [],
-              'receivers': []
+              "id": "${deviceNodeID}",
+              "type": "device",
+              "nmos_id": "${devices[0].id}",
+              "version": "${devices[0].version}",
+              "nmos_type": "${devices[0].type}",
+              "nmos_label": "${devices[0].label}",
+              "node_id": "${devices[0].node_id}",
+              "node_ref": "${selfNodeID}",
+              "senders": [],
+              "receivers": []
             },
             {
-              'id': '${pipelinesNodeID}',
-              'type': 'device',
-              'nmos_id': '${devices[1].id}',
-              'version': '${devices[1].version}',
-              'nmos_type': '${devices[1].type}',
-              'nmos_label': '${devices[1].label}',
-              'node_id': '${devices[1].node_id}',
-              'node_ref': '${selfNodeID}',
-              'senders': [],
-              'receivers': []
+              "id": "${pipelinesNodeID}",
+              "type": "device",
+              "nmos_id": "${devices[1].id}",
+              "version": "${devices[1].version}",
+              "nmos_type": "${devices[1].type}",
+              "nmos_label": "${devices[1].label}",
+              "node_id": "${devices[1].node_id}",
+              "node_ref": "${selfNodeID}",
+              "senders": [],
+              "receivers": []
             },
             {
-              'id': '${extDefNodeID}',
-              'type': 'rtp-ext',
-              'name': 'rtp-extensions-default',
-              'origin_timestamp_id': 1,
-              'smpte_tc_id': 2,
-              'smpte_tc_param': '3600@90000/25',
-              'flow_id_id': 3,
-              'source_id_id': 4,
-              'grain_flags_id': 5,
-              'sync_timestamp_id': 7,
-              'grain_duration_id': 9,
-              'ts_refclk': 'ptp=IEEE1588-2008:dd-a9-3e-5d-c7-28-28-dc'
+              "id": "${extDefNodeID}",
+              "type": "rtp-ext",
+              "name": "rtp-extensions-default",
+              "origin_timestamp_id": 1,
+              "smpte_tc_id": 2,
+              "smpte_tc_param": "3600@90000/25",
+              "flow_id_id": 3,
+              "source_id_id": 4,
+              "grain_flags_id": 5,
+              "sync_timestamp_id": 7,
+              "grain_duration_id": 9,
+              "ts_refclk": "ptp=IEEE1588-2008:dd-a9-3e-5d-c7-28-28-dc"
             }],
-            'subflows': [ ]
+            "subflows": [ ]
           }`;
 
           var globalFlowReq = http.request({
