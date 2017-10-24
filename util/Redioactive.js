@@ -114,6 +114,13 @@ function generateIDs (c) {
           }
         }
       });
+      c[t] = c[t].map((x, i) => {
+        if (x.name) { return x; }
+        else {
+          x.name = `${t}[${i}]`;
+          return x;
+        }
+      });
     }
   });
 }
