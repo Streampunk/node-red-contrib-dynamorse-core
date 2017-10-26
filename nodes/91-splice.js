@@ -13,12 +13,66 @@
   limitations under the License.
 */
 
+const util = require('util');
 var redioactive = require('../util/Redioactive.js');
 
 module.exports = function (RED) {
   function Splice (config) {
     RED.nodes.createNode(this, config);
     redioactive.Valve.call(this, config);
+
+    let cableChecked = false;
+
+    this.consume((err, x, push, next) => {
+      if (err) {
+        push(err);
+        next();
+      } else if (redioactive.isEnd(x)) {
+        push(null, x);
+      } else {
+        const nextJob = (cableChecked) ?
+          Promise.resolve(x) :
+          this.findCable(x)
+            .then(cable => {
+              if (cableChecked)
+                return x;
+
+              cableChecked = true;
+              let outCableSpec = {};
+              cable.forEach(c => {
+                const cableTypes = Object.keys(c);
+                cableTypes.forEach(t => {
+                  if (c[t] && Array.isArray(c[t])) {
+                    c[t].forEach(f => {
+                      if (outCableSpec[t])
+                        outCableSpec[t].push(f);
+                      else
+                        outCableSpec[t] = [ f ];
+                    });
+                  }
+                });
+              });
+
+              // naive for now - use the backpressure from the first cable
+              outCableSpec.backPressure = cable[0].backPressure;
+              
+              const outCable = this.makeCable(outCableSpec);
+              const formattedCable = JSON.stringify(outCable, null, 2);
+              RED.comms.publish('debug', {
+                format: `${config.type} output cable:`,
+                msg: formattedCable
+              }, true);
+              return x;
+            });
+
+        nextJob.then(x => {
+          push(null, x);
+          return next();
+        });
+      }
+    });
+    this.on('close', this.close);
   }
+  util.inherits(Splice, redioactive.Valve);
   RED.nodes.registerType('splice', Splice);
 };
