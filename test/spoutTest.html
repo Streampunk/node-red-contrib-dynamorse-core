@@ -20,7 +20,6 @@
     color: '#C1C1A6',
     defaults: {
       name: { value: "" },
-      numStreams: { value: 1, validate: RED.validators.number() },
       timeout: { value: 0, validate: RED.validators.number() }
     },
     inputs: 1,
@@ -37,10 +36,6 @@
   <div class="form-row">
     <label for="node-input-name"><i class="fa fa-tag"></i> name</label>
     <input type="text" id="node-input-name" placeholder="name">
-  </div>
-  <div class="form-row">
-    <label for="node-input-numStreams"><i class="fa fa-plus-square"></i> num streams</label>
-    <input type="number" min="1" id="node-input-numStreams" placeholder="1">
   </div>
   <div class="form-row">
     <label for="node-input-timeout"><i class="fa fa-clock-o"></i> timeout</label>
