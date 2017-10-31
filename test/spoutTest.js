@@ -15,6 +15,7 @@
 
 var util = require('util');
 var redioactive = require('../util/Redioactive.js');
+const Grain = require('../model/Grain.js');
 
 module.exports = function (RED) {
   function TestSpout (config) {
@@ -23,6 +24,12 @@ module.exports = function (RED) {
     var cableChecked = false;
     this.each((x, next) => {
       this.log(`Received ${util.inspect(x)}.`);
+      if (!Grain.isGrain(x)) {
+        this.log('TestSpout received non-Grain payload.');
+        if (config.timeout === 0) setImmediate(next);
+        else setTimeout(next, config.timeout);
+        return;
+      }
 
       var nextJob = cableChecked ? 
         Promise.resolve(x) :
@@ -45,6 +52,8 @@ module.exports = function (RED) {
     this.done(() => {
       this.log('Thank goodness that is over!');
     });
+
+    this.on('close', this.close);
   }
   util.inherits(TestSpout, redioactive.Spout);
   RED.nodes.registerType('spoutTest', TestSpout);

@@ -109,19 +109,22 @@ module.exports = function (RED) {
     }
 
     this.count = 0;
+    var flowID = null;
+    var sourceID = null;
     var tags = (config.format === 'video') ?
       makeVideoTags(+config.width, +config.height, '420P', 'raw', 0) :
       makeAudioTags(+config.channels, +config.bitsPerSample);
     this.baseTime = [ Date.now() / 1000|0, (Date.now() % 1000) * 1000000 ];
 
-    this.makeCable((config.format === 'video') ?
-      { video: [ { tags: tags } ], backPressure: 'video[0]' } :
-      { audio: [ { tags: tags } ], backPressure: 'audio[0]' });
-
-    var flowID = this.flowID();
-    var sourceID = this.sourceID();
-    
     this.generator((push, next) => {
+      if (0 === this.count) {
+        this.makeCable((config.format === 'video') ?
+          { video: [ { tags: tags } ], backPressure: 'video[0]' } :
+          { audio: [ { tags: tags } ], backPressure: 'audio[0]' });
+        flowID = this.flowID();
+        sourceID = this.sourceID();
+      }
+
       if (this.count < +config.numPushes) {
         push(null, makeGrain(srcBuf, this.baseTime, flowID, sourceID));
         this.count++;

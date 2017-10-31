@@ -70,7 +70,7 @@ function safeStatString (s) {
 
 // Cable database
 // Map of source node ID to the cable it creates
-// Casbles are objects with flow names videoA, videoB, audio1, audio2, anc1, anc2 etc.
+// Cables are objects with flow names videoA, videoB, audio1, audio2, anc1, anc2 etc.
 var cables = {};
 
 // Second is a map of cable destinations (Node-RED wires) back to source cables
@@ -88,6 +88,22 @@ function clearCables() {
 var discovery = [];
 
 const cableTypes = [ 'video', 'audio', 'anc', 'other' ];
+
+function initCabling() {
+  if (!this.context().flow.get('flowResetFlag')) {
+    this.log('Resetting cabling after re-deploy.');
+    clearCables();
+    this.context().flow.set('flowResetFlag', true);
+  }
+  this.config.wires[0].forEach(w => {
+    if (cabling[w]) {
+      if (cabling[w].indexOf(this.config.id) < 0)
+        cabling[w].push(this.config.id);
+    } else {
+      cabling[w] = [ this.config.id ];
+    }
+  });
+}
 
 function generateIDs (c) {
   cableTypes.forEach(t => {
@@ -154,20 +170,13 @@ function makeCable(flows) {
   }
   generateIDs(flows);
   cables[this.config.id] = flows;
-  if (!this.context().flow.get('flowResetFlag')) {
-    this.log('Resetting cabling after re-deploy.');
-    cabling = {};
-    this.context().flow.set('flowResetFlag', true);
-  }
   this.config.wires[0].forEach(w => {
-    if (cabling[w]) {
-      if (cabling[w].indexOf(this.config.id) < 0)
-        cabling[w].push(this.config.id);
-    } else {
-      cabling[w] = [ this.config.id ];
+    if (pending[w]) {
+      pending[w].filter(m => this.config.id === m.id)
+        .forEach(m => m.fn());
+      pending[w] = pending[w].filter(m => this.config.id !== m.id);
+      if (0 === pending[w].length) delete pending[w];
     }
-    if (pending[w]) { pending[w].forEach(f => { f(); }); }
-    delete pending[w];
   });
   discovery.forEach(f => {
     f(this, flows);
@@ -191,39 +200,40 @@ function getNMOSCable (node, g) {
     });
 }
 
-function findCable (g) {
+function findCable(g) {
   var node = this;
-  var resolved = false;
   return new Promise((resolve, reject) => {
-    if (cabling[node.config.id]) {
+    var missingCables = cabling[node.config.id].filter(x => !cables.hasOwnProperty(x));
+    if (0 === missingCables.length) {
       var cs = cabling[node.config.id].map(x => cables[x]);
       node.wsMsg.open().then(() => {
         node.wsMsg.send({'found': cs, 'srcID': node.config.id, 'srcType': node.config.type}); });
       resolve(cs);
     } else {
-      if (!pending[node.config.id]) pending[node.config.id] = [];
-      pending[node.config.id].push(() => {
-        if (!resolved) {
-          resolved = true;
-          var cs = cabling[node.config.id].map(x => cables[x]);
-          node.wsMsg.open().then(() => {
-            node.wsMsg.send({'found': cs, 'srcID': node.config.id, 'srcType': node.config.type}); });
-          resolve(cs);
-        }
+      var resolved = false;
+      pending[node.config.id] = [];
+      var p = [];
+      missingCables.forEach(c => {
+        p.push(new Promise(resolve => 
+          pending[node.config.id].push({ id: c, fn: () => resolve(c) })
+        ));
       });
-      getNMOSCable(node, g).then(cs => {
-        if (!resolved) {
-          resolved = true;
-          node.wsMsg.open().then(() => {
-            node.wsMsg.send({'found': cs, 'srcID': node.config.id, 'srcType': node.config.type}); });
-          resolve(cs);
-        }
-      }, () => {
-        node.debug(`Did not resolve cable for ${node.id} via NMOS. Resolution via internal cable is pending.`);
+      Promise.all(p).then(() => {
+        resolved = true;
+        var cs = cabling[node.config.id].map(x => cables[x]);
+        node.wsMsg.open().then(() => {
+          node.wsMsg.send({'found': cs, 'srcID': node.config.id, 'srcType': node.config.type}); });
+        resolve(cs);
       });
       setTimeout(() => {
-        if (resolved === false)
-          reject(`Unable to find input wire for node with ID ${node.config.id} of type ${node.config.type} within 2s.`);
+        if (resolved === false) {
+          console.trace(`Unable to find input wire for node with ID ${node.config.id} in cable database, now checking ledger.`);
+          getNMOSCable(node, g).then(cs => {
+            node.wsMsg.open().then(() => {
+              node.wsMsg.send({'found': cs, 'srcID': node.config.id, 'srcType': node.config.type}); });
+            resolve(cs);
+          }, () => reject(`Unable to find input wire for node with ID ${node.config.id} of type ${node.config.type} within 2s.`));
+        }
       }, 2000);
     }
   });
@@ -249,7 +259,8 @@ function Funnel (config) {
   var logger = this.context().global.get('logger');
   var ws = this.context().global.get('ws');
   this.config = config;
-
+  this.initCabling();
+  
   // console.log('***', util.inspect(this.setStatus, { showHidden: true }));
   node.setStatus('grey', 'ring', 'initialising');
   var maxBuffer = 10;
@@ -441,16 +452,31 @@ function Funnel (config) {
       }
     };
     logger.send(msgObj);
+
+    if (config.dashboard) {
+      var dashObj = [];
+      for (let i=0; i<config.wires.length-1; ++i)
+        dashObj.push(null);
+      dashObj.push({
+        topic: nodeType,
+        payload: average / 1000000,
+        name: configName,
+        error: null
+      });
+      this.send(dashObj);
+    }
   }, 1000);
   this.close = (/*done*/) => { // done is undefined :-(
     node.setStatus('yellow', 'ring', 'closing');
     next = () => {
       node.setStatus('grey', 'ring', 'closed');
     };
+    this.context().flow.set('flowResetFlag', false);
     setTimeout(() => { clearInterval(metrics); }, 2000);
   };
 }
 
+Funnel.prototype.initCabling = initCabling;
 Funnel.prototype.makeCable = makeCable;
 Funnel.prototype.flowID = function (q) { return getID.call(this, 'flowID', q); };
 Funnel.prototype.sourceID = function (q) { return getID.call(this, 'sourceID', q); };
@@ -473,7 +499,8 @@ function Valve (config) {
   }
   this.wsMsg = new webSockMsg(node, ws, config.name||'valve');
   this.config = config;
-
+  this.initCabling();
+  
   this.nodeStatus = '';
   this.setStatus = setStatus.bind(this);
   var workTimes = [];
@@ -625,16 +652,31 @@ function Valve (config) {
       }
     };
     logger.send(msgObj);
+
+    if (config.dashboard) {
+      var dashObj = [];
+      for (let i=0; i<config.wires.length-1; ++i)
+        dashObj.push(null);
+      dashObj.push({
+        topic: nodeType,
+        payload: average / 1000000,
+        name: configName,
+        error: null
+      });
+      this.send(dashObj);
+    }
   }, 1000);
   this.close = (/*done*/) => { // done is undefined :-(
     node.setStatus('yellow', 'ring', 'closing');
     next = () => {
       node.setStatus('grey', 'ring', 'closed');
     };
+    this.context().flow.set('flowResetFlag', false);
     setTimeout(() => { clearInterval(metrics); }, 2000);
   };
 }
 
+Valve.prototype.initCabling = initCabling;
 Valve.prototype.makeCable = makeCable;
 Valve.prototype.findCable = findCable;
 Valve.prototype.flowID = function (q) { return getID.call(this, 'flowID', q); };
@@ -657,7 +699,7 @@ function Spout (config) {
   var numStreams = config.numStreams||1;
   var numEnds = 0;
   this.config = config;
-
+  
   var eachFn = null;
   var doneFn = () => { };
   var errorFn = (err) => { // Default error handler shuts the pipeline
@@ -740,12 +782,26 @@ function Spout (config) {
       }
     };
     logger.send(msgObj);
+
+    if (config.dashboard) {
+      var dashObj = [];
+      for (let i=0; i<config.wires.length-1; ++i)
+        dashObj.push(null);
+      dashObj.push({
+        topic: nodeType,
+        payload: average / 1000000,
+        name: configName,
+        error: null
+      });
+      this.send(dashObj);
+    }
   }, 1000);
   this.close = (/*done*/) => {
     node.wsMsg.send({'close': 0});
     if (ws) ws.close();
     ws = null;
     this.context().global.set('ws', null);
+    this.context().flow.set('flowResetFlag', false);
     setTimeout(() => { clearInterval(metrics); }, 2000);
   };
   this.preFlightError = e => {

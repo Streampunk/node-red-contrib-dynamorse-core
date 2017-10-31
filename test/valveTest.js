@@ -20,23 +20,47 @@ module.exports = function (RED) {
   function ValveTest (config) {
     RED.nodes.createNode(this, config);
     redioactive.Valve.call(this, config);
-    this.findCable()
-      .then(c => {
-        this.log(`Details of input cable(s) is/are:\n${JSON.stringify(c, null, 2)}`);
-        return this.makeCable(c[0]);
-      })
-      .catch(e => this.warn(e));
+
+    let cableChecked = false;
+    
     this.consume((err, x, push, next) => {
       if (err) {
         push(err);
+        next();
       } else if (x === redioactive.end) {
         push(null, redioactive.end);
+        next();
       } else {
-        push(null, x);
+        const nextJob = (cableChecked) ?
+          Promise.resolve(x) :
+          this.findCable(x)
+            .then(cable => {
+              cableChecked = true;
+              let outCableSpec = {};
+              const cableTypes = Object.keys(cable[0]);
+              cableTypes.forEach(t => {
+                if (cable[0][t] && Array.isArray(cable[0][t]))
+                  outCableSpec[t] = cable[0][t];
+              });
+
+              outCableSpec.backPressure = cable[0].backPressure;
+              this.makeCable(outCableSpec);
+              return x;
+            });
+
+        nextJob.then(x => {
+          push(null, x);
+
+          if (config.timeout === 0) setImmediate(next);
+          else setTimeout(next, config.timeout);
+        }).catch(err => {
+          push(err);
+          next();
+        });
       }
-      if (config.timeout === 0) setImmediate(next);
-      else setTimeout(next, config.timeout);
     });
+  
+    this.on('close', this.close);
   }
 
   util.inherits(ValveTest, redioactive.Valve);
