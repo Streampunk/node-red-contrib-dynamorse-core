@@ -35,6 +35,8 @@ var isEnd = function (x) {
 };
 var theEnd = new End;
 
+var noTiming = true;
+
 var setStatus = function (fill, shape, text) {
   // console.log('***', arguments);
   if (this.nodeStatus !== text && this.nodeStatus !== 'done') {
@@ -458,7 +460,7 @@ function Funnel (config) {
       for (let i=0; i<config.wires.length-1; ++i)
         dashObj.push(null);
       dashObj.push({
-        topic: nodeType,
+        topic: configName,
         payload: average / 1000000,
         name: configName,
         error: null
@@ -597,8 +599,8 @@ function Valve (config) {
     var startTime = process.hrtime();
     if (isEnd(msg.payload))
       return () => { };
-    return () => {
-      workTimes.push(process.hrtime(startTime));
+    return (ignoreTiming) => {
+      if (!ignoreTiming) workTimes.push(process.hrtime(startTime));
       if (queue.length > 0.8 * maxBuffer) {
         paused.push(msg.pull);
         node.wsMsg.send({'pause': queue.length});
@@ -658,7 +660,7 @@ function Valve (config) {
       for (let i=0; i<config.wires.length-1; ++i)
         dashObj.push(null);
       dashObj.push({
-        topic: nodeType,
+        topic: configName,
         payload: average / 1000000,
         name: configName,
         error: null
@@ -724,8 +726,8 @@ function Spout (config) {
   };
   var next = msg => {
     var startTime = process.hrtime();
-    return () => {
-      workTimes.push(process.hrtime(startTime));
+    return (ignoreTiming) => {
+      if (!ignoreTiming) workTimes.push(process.hrtime(startTime));
       setImmediate(() => {
         node.wsMsg.send({'pull': node.id});
         msg.pull(node.id);
@@ -788,7 +790,7 @@ function Spout (config) {
       for (let i=0; i<config.wires.length-1; ++i)
         dashObj.push(null);
       dashObj.push({
-        topic: nodeType,
+        topic: configName,
         payload: average / 1000000,
         name: configName,
         error: null
@@ -823,6 +825,7 @@ module.exports = {
   Spout : Spout,
   end : theEnd,
   isEnd : isEnd,
+  noTiming : noTiming,
   addDiscovery : addDiscovery,
   clearCables : clearCables
 };
