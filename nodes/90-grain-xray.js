@@ -14,49 +14,79 @@
 */
 
 var redioactive = require('../util/Redioactive.js');
+const Grain = require('../model/Grain.js');
 var util = require('util');
 
 module.exports = function (RED) {
   function GrainDebug (config) {
     RED.nodes.createNode(this, config);
     redioactive.Valve.call(this, config);
+
+    let cableChecked = false;
+    let setupError = null;
+
     this.count = 0;
     var node = this;
-    this.findCable().then(c => {
-      console.log('Found a cable', c);
-      this.makeCable(c[0]); // Assume one-to-one, not splicing
-      if (config.showCable === true) {
-        var formattedCable = JSON.stringify(c, null, 2);
-        RED.comms.publish('debug', {
-          format: 'Cable',
-          msg: formattedCable
-        }, true);
-        if (config.toConsole === true)
-          node.log(formattedCable);
-      }
-    });
+
     this.consume((err, x, push, next) => {
       if (err) {
         push (err);
         next();
       } else if (redioactive.isEnd(x)) {
         push (null, x);
-      } else {
-        if (this.count % config.showEvery === 0) {
-          var formattedGrain = JSON.stringify(x, null, 2);
-          RED.comms.publish('debug', {
-            format : `Grain ${this.count}`,
-            msg: formattedGrain
-          }, true);
-          if (config.toConsole) {
-            this.log(formattedGrain);
+      } else if (Grain.isGrain(x)) {
+        const nextJob = (cableChecked) ?
+          Promise.resolve(x) :
+          this.findCable(x)
+            .then(c => {
+              cableChecked = true;
+
+              this.makeCable(c[0]); // Assume one-to-one, not splicing
+              if (config.showCable === true) {
+                var formattedCable = JSON.stringify(c, null, 2);
+                RED.comms.publish('debug', {
+                  format: 'Cable',
+                  msg: formattedCable
+                }, true);
+                if (config.toConsole === true)
+                  node.log(formattedCable);
+              }
+            });
+
+        nextJob.then(x => {
+          if (setupError) {
+            push(setupError);
+            return next();
           }
-        }
+          else {
+            if (this.count % config.showEvery === 0) {
+              var formattedGrain = JSON.stringify(x, null, 2);
+              RED.comms.publish('debug', {
+                format : `Grain ${this.count}`,
+                msg: formattedGrain
+              }, true);
+              if (config.toConsole) {
+                this.log(formattedGrain);
+              }
+            }              
+            push(null, x);
+            next();
+            this.count++;
+          }
+        }).catch(err => {
+          if (!setupError) {
+            setupError = err;
+            console.log(setupError);
+          }
+          push(setupError);
+          return next();
+        });
+      } else {
         push(null, x);
         next();
-        this.count++;
       }
     });
+    this.on('close', this.close);
   }
   util.inherits(GrainDebug, redioactive.Valve);
   RED.nodes.registerType('grain-xray', GrainDebug);
