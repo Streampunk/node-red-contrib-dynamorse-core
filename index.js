@@ -18,5 +18,6 @@ module.exports = {
   Timecode : require('./model/Timecode.js'),
   Grain : require('./model/Grain.js'),
   SDPProcessing : require('./util/SDPProcessing.js'),
-  Net : require('./util/Net.js')
+  Net : require('./util/Net.js'),
+  Multiflows : require('./util/Multiflows.js')
 };

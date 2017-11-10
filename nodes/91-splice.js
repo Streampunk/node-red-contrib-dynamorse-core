@@ -14,7 +14,9 @@
 */
 
 const util = require('util');
-var redioactive = require('../util/Redioactive.js');
+const redioactive = require('../util/Redioactive.js');
+const Grain = require('../model/Grain.js');
+const multiFlows = require('../util/Multiflows.js');
 
 module.exports = function (RED) {
   function Splice (config) {
@@ -22,6 +24,8 @@ module.exports = function (RED) {
     redioactive.Valve.call(this, config);
 
     let cableChecked = false;
+    let setupError = null;
+    let srcFlows = null;
 
     this.consume((err, x, push, next) => {
       if (err) {
@@ -29,7 +33,7 @@ module.exports = function (RED) {
         next();
       } else if (redioactive.isEnd(x)) {
         push(null, x);
-      } else {
+      } else if (Grain.isGrain(x)) {
         const nextJob = (cableChecked) ?
           Promise.resolve(x) :
           this.findCable(x)
@@ -62,13 +66,45 @@ module.exports = function (RED) {
                 format: `${config.type} output cable:`,
                 msg: formattedCable
               }, true);
+
+              srcFlows = new multiFlows(cable);
               return x;
             });
 
         nextJob.then(x => {
-          push(null, x);
-          return next();
+          if (setupError) {
+            push(setupError);
+            return next(redioactive.noTiming);
+          }
+          else {
+            const queue = srcFlows.checkID(x);
+            if (queue) {
+              const grainSet = srcFlows.addGrain(x, queue, next);
+              if (grainSet) {
+                const grainTypes = Object.keys(grainSet);
+                grainTypes.forEach(t => {
+                  grainSet[t].forEach(g => {
+                    push(null, g.grain);
+                    g.next();
+                  });
+                });
+              }
+            } else {
+              this.log(`${config.type} dropping grain with flowID ${x.flow_id}`);
+              return next(redioactive.noTiming);
+            }
+          }
+        }).catch(err => {
+          if (!setupError) {
+            setupError = err;
+            console.log(setupError);
+          }
+          push(setupError);
+          return next(redioactive.noTiming);
         });
+      } else {
+        push(null, x);
+        next(redioactive.noTiming);
       }
     });
     this.on('close', this.close);
