@@ -30,9 +30,8 @@ module.exports = function (RED) {
     let cableChecked = false;
 
     const memTimer = setInterval(() => {
-      var usage = process.memoryUsage();
-      const memType = ['rss', 'heapTotal', 'heapUsed', 'external'];
-      memType.forEach(t => this.send([{topic: t, payload: usage[t], error: null}, null]));
+      const usage = process.memoryUsage();
+      Object.keys(usage).forEach(t => this.send([{topic: t, payload: usage[t], error: null}, null]));
     }, 2000);
 
     this.each((x, next) => {
