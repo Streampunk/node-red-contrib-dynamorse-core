@@ -29,6 +29,12 @@ module.exports = function (RED) {
     let loopMs = {};
     let cableChecked = false;
 
+    const memTimer = setInterval(() => {
+      var usage = process.memoryUsage();
+      const memType = ['rss', 'heapTotal', 'heapUsed', 'external'];
+      memType.forEach(t => this.send([{topic: t, payload: usage[t], error: null}, null]));
+    }, 2000);
+
     this.each((x, next) => {
       if (!Grain.isGrain(x)) {
         this.log('Dashboard received non-Grain payload.');
@@ -77,12 +83,12 @@ module.exports = function (RED) {
           let flows = '';
           flowIDs.forEach(id => flows = flows.concat(`${id.name}: flowID ${id.flowID}, sourceID ${id.sourceID}\n`));
           
-          this.send({
+          this.send([null, {
             topic: name,
             payload: 1000.0 / avgMs,
             flows: flows,
             error: null
-          });
+          }]);
         }
         next();
       }).catch(err => {
@@ -92,80 +98,11 @@ module.exports = function (RED) {
     });
 
     this.done(() => {
+      clearInterval(memTimer);
       this.log('Dashboard Done!');
     });
 
     this.on('close', this.close);
-
-    // this.consume((err, x, push, next) => {
-    //   if (err) {
-    //     push (err);
-    //     next();
-    //   } else if (redioactive.isEnd(x)) {
-    //     push (null, x);
-    //   } else if (Grain.isGrain(x)) {
-    //     const nextJob = (cableChecked) ?
-    //       Promise.resolve(x) :
-    //       this.findCable(x)
-    //         .then(c => {
-    //           cableChecked = true;
-    //           const cable = c[0];
-    //           const cableTypes = Object.keys(cable);
-    //           cableTypes.forEach(t => {
-    //             if (cable[t] && Array.isArray(cable[t])) {
-    //               cable[t].forEach(f => flowIDs.push({ name: f.name, flowID: f.flowID, sourceID: f.sourceID }));
-    //             }
-    //           });          
-    //           this.makeCable(cable);
-    //           return x;
-    //         });
-
-    //     nextJob.then(x => {
-    //       const grainFlowID = uuid.unparse(x.flow_id);
-    //       const grainSourceID = uuid.unparse(x.source_id);
-    //       if (!count.hasOwnProperty(grainFlowID)) {
-    //         count[grainFlowID] = 0;
-    //         startTime[grainFlowID] = process.hrtime();
-    //         loopMs[grainFlowID] = [];
-    //       }
-    //       const elapsed = process.hrtime(startTime[grainFlowID]);
-    //       startTime[grainFlowID] = process.hrtime();
-    //       loopMs[grainFlowID].push((elapsed[0] * 1000000000 + elapsed[1]) / 1000000);
-
-    //       if (++count[grainFlowID] % config.showEvery === 0) {
-    //         const avgMs = loopMs[grainFlowID].reduce((prev, curr) => prev + curr, 0) / config.showEvery;
-    //         loopMs[grainFlowID] = [];
-
-    //         let name = 'flow';
-    //         flowIDs.find(id => {
-    //           if ((grainFlowID === id.flowID) && (grainSourceID === id.sourceID)) {
-    //             name = id.name;
-    //             return true;
-    //           } else 
-    //             return false;
-    //         });
-
-    //         let flows = '';
-    //         flowIDs.forEach(id => flows = flows.concat(`${id.name}: flowID ${id.flowID}, sourceID ${id.sourceID}\n`));
-            
-    //         this.send([null, {
-    //           topic: name,
-    //           payload: 1000.0 / avgMs,
-    //           flows: flows,
-    //           error: null
-    //         }]);
-    //       }
-    //       push(null, x);
-    //       next();
-    //     }).catch(err => {
-    //       push(err);
-    //       next();
-    //     });
-    //   } else {
-    //     push(null, x);
-    //     next();
-    //   }
-    // });
   }
   util.inherits(Dashboard, redioactive.Spout);
   RED.nodes.registerType('dashboard', Dashboard);
