@@ -13,12 +13,12 @@
   limitations under the License.
 */
 
-var TestUtil = require('dynamorse-test').TestUtil;
+const TestUtil = require('dynamorse-test');
 
-var funnel1NodeId = '24fde3d7.b7544c';
-var funnel2NodeId = '7c968c40.836974';
-var valveNodeId = '634c3672.78be18';
-var spoutNodeId = 'f2186999.7e5f78';
+const funnel1NodeId = '24fde3d7.b7544c';
+const funnel2NodeId = '7c968c40.836974';
+const valveNodeId = '634c3672.78be18';
+const spoutNodeId = 'f2186999.7e5f78';
 
 TestUtil.nodeRedTest('A video funnel->valve->spout flow is posted to Node-RED', {
   numPushes: 10,
@@ -27,23 +27,26 @@ TestUtil.nodeRedTest('A video funnel->valve->spout flow is posted to Node-RED', 
   valveTimeout: 0,
   spoutTimeout: 0
 }, params => {
-  var testFlow = JSON.parse(TestUtil.testNodes.baseTestFlow);
-  testFlow.nodes[0] = JSON.parse(TestUtil.testNodes.funnelGrainNode);
-  testFlow.nodes[0].id = `${funnel1NodeId}`;
-  testFlow.nodes[0].numPushes = params.numPushes;
-  testFlow.nodes[0].format = 'video';
-  testFlow.nodes[0].maxBuffer = params.funnelMaxBuffer;
-  testFlow.nodes[0].wires[0][0] = `${valveNodeId}`;
+  var testFlow = TestUtil.testNodes.baseTestFlow();
+  testFlow.nodes.push(Object.assign(TestUtil.testNodes.funnelGrainNode(), {
+    id: funnel1NodeId,
+    numPushes: params.numPushes,
+    format: 'video',
+    maxBuffer: params.funnelMaxBuffer,
+    wires: [ [ valveNodeId ] ]
+  }));
 
-  testFlow.nodes[1] = JSON.parse(TestUtil.testNodes.valveTestNode);
-  testFlow.nodes[1].id = `${valveNodeId}`;
-  testFlow.nodes[1].maxBuffer = params.valveMaxBuffer;
-  testFlow.nodes[1].timeout = params.valveTimeout;
-  testFlow.nodes[1].wires[0][0] = `${spoutNodeId}`;
+  testFlow.nodes.push(Object.assign(TestUtil.testNodes.valveTestNode(), {
+    id: valveNodeId,
+    maxBuffer: params.valveMaxBuffer,
+    timeout: params.valveTimeout,
+    wires: [ [ spoutNodeId ] ]
+  }));
 
-  testFlow.nodes[2] = JSON.parse(TestUtil.testNodes.spoutTestNode);
-  testFlow.nodes[2].id = `${spoutNodeId}`;
-  testFlow.nodes[2].timeout = params.spoutTimeout;
+  testFlow.nodes.push(Object.assign(TestUtil.testNodes.spoutTestNode(), {
+    id: spoutNodeId,
+    timeout: params.spoutTimeout
+  }));
   return testFlow;
 }, (t, params, msgObj, onEnd) => {
   //t.comment(`Message: ${JSON.stringify(msgObj)}`);
@@ -69,28 +72,31 @@ TestUtil.nodeRedTest('A funnelx2->spout flow is posted to Node-RED', {
   params.funCount = [];
   for (var i=0; i<params.numPushes; ++i)
     params.funCount[i] = 0;
-  var testFlow = JSON.parse(TestUtil.testNodes.baseTestFlow);
-  testFlow.nodes[0] = JSON.parse(TestUtil.testNodes.funnelCountNode);
-  testFlow.nodes[0].name = 'funnel1';
-  testFlow.nodes[0].id = `${funnel1NodeId}`;
-  testFlow.nodes[0].end = params.numPushes-1;
-  testFlow.nodes[0].maxBuffer = params.funnelMaxBuffer;
-  testFlow.nodes[0].delay = 0;
-  testFlow.nodes[0].wires[0][0] = `${spoutNodeId}`;
+  var testFlow = TestUtil.testNodes.baseTestFlow();
+  testFlow.nodes.push(Object.assign(TestUtil.testNodes.funnelCountNode(), {
+    name: 'funnel1',
+    id: funnel1NodeId,
+    end: params.numPushes-1,
+    maxBuffer: params.funnelMaxBuffer,
+    delay: 0,
+    wires: [ [spoutNodeId ] ]
+  }));
 
-  testFlow.nodes[1] = JSON.parse(TestUtil.testNodes.funnelCountNode);
-  testFlow.nodes[1].name = 'funnel2';
-  testFlow.nodes[1].y = 200;
-  testFlow.nodes[1].id = `${funnel2NodeId}`;
-  testFlow.nodes[1].end = params.numPushes-1;
-  testFlow.nodes[1].maxBuffer = params.funnelMaxBuffer;
-  testFlow.nodes[1].delay = 4;
-  testFlow.nodes[1].wires[0][0] = `${spoutNodeId}`;
+  testFlow.nodes.push(Object.assign(TestUtil.testNodes.funnelCountNode(), {
+    name: 'funnel2',
+    id: funnel2NodeId,
+    y: 200,
+    end: params.numPushes-1,
+    maxBuffer: params.funnelMaxBuffer,
+    delay: 4,
+    wires: [ [ spoutNodeId ] ]
+  }));
 
-  testFlow.nodes[2] = JSON.parse(TestUtil.testNodes.spoutTestNode);
-  testFlow.nodes[2].id = `${spoutNodeId}`;
-  testFlow.nodes[2].timeout = params.spoutTimeout;
-  testFlow.nodes[2].numStreams = 2;
+  testFlow.nodes.push(Object.assign(TestUtil.testNodes.spoutTestNode(), {
+    id: spoutNodeId,
+    timeout: params.spoutTimeout,
+    numStreams: 2
+  }));
   return testFlow;
 }, (t, params, msgObj, onEnd) => {
   // t.comment(`Message: ${JSON.stringify(msgObj)}`);
@@ -118,17 +124,19 @@ TestUtil.nodeRedTest('An audio funnel->spout flow is posted to Node-RED', {
   funnelMaxBuffer: 10,
   spoutTimeout: 0
 }, params => {
-  var testFlow = JSON.parse(TestUtil.testNodes.baseTestFlow);
-  testFlow.nodes[0] = JSON.parse(TestUtil.testNodes.funnelGrainNode);
-  testFlow.nodes[0].id = `${funnel1NodeId}`;
-  testFlow.nodes[0].numPushes = params.numPushes;
-  testFlow.nodes[0].format = 'audio';
-  testFlow.nodes[0].maxBuffer = params.funnelMaxBuffer;
-  testFlow.nodes[0].wires[0][0] = `${spoutNodeId}`;
+  var testFlow = TestUtil.testNodes.baseTestFlow();
+  testFlow.nodes.push(Object.assign(TestUtil.testNodes.funnelGrainNode(), {
+    id: funnel1NodeId,
+    numPushes: params.numPushes,
+    format: 'audio',
+    maxBuffer: params.funnelMaxBuffer,
+    wires: [ [ spoutNodeId ] ]
+  }));
 
-  testFlow.nodes[1] = JSON.parse(TestUtil.testNodes.spoutTestNode);
-  testFlow.nodes[1].id = `${spoutNodeId}`;
-  testFlow.nodes[1].timeout = params.spoutTimeout;
+  testFlow.nodes.push(Object.assign(TestUtil.testNodes.spoutTestNode(), {
+    id: spoutNodeId,
+    timeout: params.spoutTimeout
+  }));
   return testFlow;
 }, (t, params, msgObj, onEnd) => {
   // t.comment(`Message: ${JSON.stringify(msgObj)}`);

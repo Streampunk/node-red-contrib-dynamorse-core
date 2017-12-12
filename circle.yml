@@ -1,6 +1,6 @@
 machine:
   node:
-    version: 6.11.4
+    version: 8.9.3
 
 dependencies:
   pre:
@@ -9,7 +9,7 @@ dependencies:
     - npm install -g tap-xunit
     - npm install -g node-red
     - npm install -g pm2
-    - pm2 start /opt/circleci/nodejs/v6.11.4/bin/node-red
+    - pm2 start /opt/circleci/nodejs/v8.9.3/bin/node-red
     - |
       curl -d '{"module": "node-red-contrib-dynamorse-core"}' -H 'Content-Type: application/json' 127.0.0.1:1880/nodes
 

@@ -13,23 +13,23 @@
   limitations under the License.
 */
 
-const TestUtil = require('dynamorse-test').TestUtil;
+const TestUtil = require('dynamorse-test');
 
 const funnel1NodeId = '24fde3d7.b7544c';
-var funnel2NodeId = 'ba156ff1.45ea9';
-var funnel3NodeId = '6e6a8581.91957c';
-var valve1NodeId = '634c3672.78be18';
-var valve2NodeId = '7c968c40.836974';
-var spliceNodeId = '107c721c.8c951e';
+const funnel2NodeId = 'ba156ff1.45ea9';
+const funnel3NodeId = '6e6a8581.91957c';
+const valve1NodeId = '634c3672.78be18';
+const valve2NodeId = '7c968c40.836974';
+const spliceNodeId = '107c721c.8c951e';
 const spoutNodeId = 'f2186999.7e5f78';
 
-var spliceTestNode = JSON.stringify({
-  'type': 'splice',
-  'z': TestUtil.testFlowId,
-  'name': 'splice-test',
-  'x': 500.0,
-  'y': 200.0,
-  'wires': [[]]
+var spliceTestNode = () => ({
+  type: 'splice',
+  z: TestUtil.testFlowId,
+  name: 'splice-test',
+  x: 500.0,
+  y: 200.0,
+  wires: [[]]
 });
 
 TestUtil.nodeRedTest('Cables: a video funnel->spout flow is posted to Node-RED', {
@@ -39,17 +39,19 @@ TestUtil.nodeRedTest('Cables: a video funnel->spout flow is posted to Node-RED',
   sourceID: null,
   flowID: null
 }, params => {
-  const testFlow = JSON.parse(TestUtil.testNodes.baseTestFlow);
-  testFlow.nodes[0] = JSON.parse(TestUtil.testNodes.funnelGrainNode);
-  testFlow.nodes[0].id = `${funnel1NodeId}`;
-  testFlow.nodes[0].numPushes = params.numPushes;
-  testFlow.nodes[0].format = 'video';
-  testFlow.nodes[0].maxBuffer = params.funnelMaxBuffer;
-  testFlow.nodes[0].wires[0][0] = `${spoutNodeId}`;
+  const testFlow = TestUtil.testNodes.baseTestFlow();
+  testFlow.nodes.push(Object.assign(TestUtil.testNodes.funnelGrainNode(), {
+    id: funnel1NodeId,
+    numPushes: params.numPushes,
+    format: 'video',
+    maxBuffer: params.funnelMaxBuffer,
+    wires: [ [ spoutNodeId ] ]
+  }));
 
-  testFlow.nodes[1] = JSON.parse(TestUtil.testNodes.spoutTestNode);
-  testFlow.nodes[1].id = `${spoutNodeId}`;
-  testFlow.nodes[1].timeout = params.spoutTimeout;
+  testFlow.nodes.push(Object.assign(TestUtil.testNodes.spoutTestNode(), {
+    id: spoutNodeId,
+    timeout: params.spoutTimeout
+  }));
   return testFlow;
 }, (t, params, msgObj, onEnd) => {
   // t.comment(`Message: ${JSON.stringify(msgObj)}`);
@@ -91,60 +93,67 @@ TestUtil.nodeRedTest('A video funnelx3->valve->splice->spout flow is posted to N
   spliceMaxBuffer: 10,
   spoutTimeout: 0
 }, params => {
-  var testFlow = JSON.parse(TestUtil.testNodes.baseTestFlow);
-  testFlow.nodes[0] = JSON.parse(TestUtil.testNodes.funnelGrainNode);
-  testFlow.nodes[0].id = `${funnel1NodeId}`;
-  testFlow.nodes[0].numPushes = params.numPushes;
-  testFlow.nodes[0].format = 'video';
-  testFlow.nodes[0].maxBuffer = params.funnelMaxBuffer;
-  testFlow.nodes[0].delay = 10;
-  testFlow.nodes[0].wires[0][0] = `${valve1NodeId}`;
+  var testFlow = TestUtil.testNodes.baseTestFlow();
+  testFlow.nodes.push(Object.assign(TestUtil.testNodes.funnelGrainNode(), {
+    id: funnel1NodeId,
+    numPushes: params.numPushes,
+    format: 'video',
+    maxBuffer: params.funnelMaxBuffer,
+    delay: 10,
+    wires: [ [ valve1NodeId ] ]
+  }));
 
-  testFlow.nodes[1] = JSON.parse(TestUtil.testNodes.funnelGrainNode);
-  testFlow.nodes[1].id = `${funnel2NodeId}`;
-  testFlow.nodes[1].numPushes = params.numPushes;
-  testFlow.nodes[1].format = 'video';
-  testFlow.nodes[1].maxBuffer = params.funnelMaxBuffer;
-  testFlow.nodes[1].delay = 10;
-  testFlow.nodes[1].y = 200.0;
-  testFlow.nodes[1].wires[0][0] = `${valve2NodeId}`;
+  testFlow.nodes.push(Object.assign(TestUtil.testNodes.funnelGrainNode(), {
+    id: funnel2NodeId,
+    numPushes: params.numPushes,
+    format: 'video',
+    maxBuffer: params.funnelMaxBuffer,
+    delay: 10,
+    y: 200.0,
+    wires: [ [ valve2NodeId ] ]
+  }));
 
-  testFlow.nodes[2] = JSON.parse(TestUtil.testNodes.funnelGrainNode);
-  testFlow.nodes[2].id = `${funnel3NodeId}`;
-  testFlow.nodes[2].numPushes = params.numPushes;
-  testFlow.nodes[2].format = 'audio';
-  testFlow.nodes[2].maxBuffer = params.funnelMaxBuffer;
-  testFlow.nodes[2].delay = 10;
-  testFlow.nodes[2].y = 300;
-  testFlow.nodes[2].wires[0][0] = `${spliceNodeId}`;
+  testFlow.nodes.push(Object.assign(TestUtil.testNodes.funnelGrainNode(), {
+    id: funnel3NodeId,
+    numPushes: params.numPushes,
+    format: 'audio',
+    maxBuffer: params.funnelMaxBuffer,
+    delay: 10,
+    y: 300,
+    wires: [ [ spliceNodeId ] ]
+  }));
 
-  testFlow.nodes[3] = JSON.parse(TestUtil.testNodes.valveTestNode);
-  testFlow.nodes[3].id = `${valve1NodeId}`;
-  testFlow.nodes[3].maxBuffer = params.valveMaxBuffer;
-  testFlow.nodes[3].timeout = params.valveTimeout;
-  testFlow.nodes[3].x = 300;
-  testFlow.nodes[3].wires[0][0] = `${spliceNodeId}`;
+  testFlow.nodes.push(Object.assign(TestUtil.testNodes.valveTestNode(), {
+    id: valve1NodeId,
+    maxBuffer: params.valveMaxBuffer,
+    timeout: params.valveTimeout,
+    x: 300,
+    wires: [ [ spliceNodeId ] ]
+  }));
 
-  testFlow.nodes[4] = JSON.parse(TestUtil.testNodes.valveTestNode);
-  testFlow.nodes[4].id = `${valve2NodeId}`;
-  testFlow.nodes[4].maxBuffer = params.valveMaxBuffer;
-  testFlow.nodes[4].timeout = params.valveTimeout;
-  testFlow.nodes[4].x = 300;
-  testFlow.nodes[4].y = 200;
-  testFlow.nodes[4].wires[0][0] = `${spliceNodeId}`;
+  testFlow.nodes.push(Object.assign(TestUtil.testNodes.valveTestNode(), {
+    id: `${valve2NodeId}`,
+    maxBuffer: params.valveMaxBuffer,
+    timeout: params.valveTimeout,
+    x: 300,
+    y: 200,
+    wires: [ [ spliceNodeId ] ]
+  }));
 
-  testFlow.nodes[5] = JSON.parse(spliceTestNode);
-  testFlow.nodes[5].id = `${spliceNodeId}`;
-  testFlow.nodes[5].maxBuffer = params.spliceMaxBuffer;
-  testFlow.nodes[5].x = 500;
-  testFlow.nodes[5].y = 200;
-  testFlow.nodes[5].wires[0][0] = `${spoutNodeId}`;
+  testFlow.nodes.push(Object.assign(spliceTestNode(), {
+    id: `${spliceNodeId}`,
+    maxBuffer: params.spliceMaxBuffer,
+    x: 500,
+    y: 200,
+    wires: [ [spoutNodeId ] ]
+  }));
 
-  testFlow.nodes[6] = JSON.parse(TestUtil.testNodes.spoutTestNode);
-  testFlow.nodes[6].id = `${spoutNodeId}`;
-  testFlow.nodes[6].timeout = params.spoutTimeout;
-  testFlow.nodes[6].x = 700;
-  testFlow.nodes[6].y = 200;
+  testFlow.nodes.push(Object.assign(TestUtil.testNodes.spoutTestNode(), {
+    id: spoutNodeId,
+    timeout: params.spoutTimeout,
+    x: 700,
+    y: 200
+  }));
   return testFlow;
 }, (t, params, msgObj, onEnd) => {
   // t.comment(`Message: ${JSON.stringify(msgObj)}`);
