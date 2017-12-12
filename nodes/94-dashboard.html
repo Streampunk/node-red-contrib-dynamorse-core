@@ -23,7 +23,7 @@
       showEvery : { value : 10, validate : RED.validators.number() }
     },
     inputs:1,
-    outputs:1,
+    outputs:2,
     icon: "chart.png",
     label: function() {
       return this.name || "dashboard";
@@ -52,7 +52,7 @@
 
 <script type="text/x-red" data-help-name="dashboard">
   <h1>Dashboard</h1>
-  <p>Provide an output for dashboard nodes from the grains flowing into this valve from input wires.</p>
+  <p>Provide monitoring outputs suitable for connection to dashboard chart nodes. The first pin provides messages that report on current memory usage, the second pin provides messages that report the average grains per second rate on the input wires.</p>
 
   <h3>Parameters</h3>
   <div class="param-table">
@@ -72,9 +72,11 @@
   </div>
 
   <p></p>
-  <p>The output messages consist of a <em>per flow</em> topic and a payload of the average number of grains per second on the input. The messages also contain a flows parameter that is a string with the details of the flows on the input cable.</p>
+  <p>The first pin output messages consist of a set of topics and payloads of process memory usage from node.js. These messages are sent every 2 seconds</p>
+  
+  <p>The second pin output messages consist of a <em>per flow</em> topic and a payload of the average number of grains per second on the input. The messages also contain a flows parameter that is a string with the details of the flows on the input cable.</p>
 
-  <p>To avoid generating a large amount of data and the impact affecting application performance, set the <em>show every</em> parameter to a value that represents about once or twice a second. For example, 25 for a grain rate of 25&nbsp;grains/second.</p>
+  <p>To avoid generating a large amount of data on the second pin and the impact affecting application performance, set the <em>show every</em> parameter to a value that represents about once or twice a second. For example, 25 for a grain rate of 25&nbsp;grains/second.</p>
   
   <h3>Maturity</h3>
   <p>Implemented.</p>
