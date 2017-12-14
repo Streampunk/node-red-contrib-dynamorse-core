@@ -59,6 +59,7 @@ function makeVideoTags(width, height, packing, encodingName, interlace) {
     depth: 8,
     sampling: 'YCbCr-4:2:0',
     interlace: interlace === 1,
+    clockRate: 90000,
     grainDuration: [1, 25]
   };
   return tags;
@@ -80,7 +81,7 @@ function makeAudioTags(channels, bitsPerSample) {
     channels: channels,
     clockRate: 48000,
     encodingName: `L${bitsPerSample}`,
-    blockAlign: ((bitsPerSample+7)/8)>>>0,
+    blockAlign: ((bitsPerSample * channels+7)/8)>>>0,
     grainDuration: [1, 25]
   };
   return tags;

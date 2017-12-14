@@ -150,7 +150,7 @@ TestUtil.nodeRedTest('An audio funnel->spout flow is posted to Node-RED', {
       'logical cable made with audio array of length 1.');
     t.deepEqual(msgObj.made.audio[0].tags, {
       format: 'audio', channels: 2, clockRate: 48000, encodingName: 'L16',
-      blockAlign: 2, grainDuration: [1, 25]},
+      blockAlign: 4, grainDuration: [1, 25]},
     'logical cable made with tags as expected.');
     t.ok(msgObj.made.audio[0].flowID,
       'logical cable made with a flow ID.');
@@ -168,7 +168,7 @@ TestUtil.nodeRedTest('An audio funnel->spout flow is posted to Node-RED', {
     'logical cable found with audio array of length 1.');
     t.deepEqual(msgObj.found[0].audio[0].tags, {
       format: 'audio', channels: 2, clockRate: 48000, encodingName: 'L16',
-      blockAlign: 2, grainDuration: [1, 25]},
+      blockAlign: 4, grainDuration: [1, 25]},
     'logical cable found with tags as expected.');
     t.ok(msgObj.found[0].audio[0].flowID,
       'logical cable found with a flow ID.');
