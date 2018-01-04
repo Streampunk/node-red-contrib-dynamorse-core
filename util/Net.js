@@ -13,18 +13,18 @@
   limitations under the License.
 */
 
-var getFirstRealIP4Interface = function() {
+var getFirstRealIP4Interface = () => {
   var ifaces = require('os').networkInterfaces();
-  var bumpy =  Object.keys(ifaces).map(iname => {
+  var bumpy = Object.keys(ifaces).map(iname => {
     var iface = ifaces[iname]; return iface.map(x => {
       x.ifname = iname; return x;
     });
   });
   var flatter = Array.prototype.concat.apply([], bumpy);
-  return flatter.find(x => { return x.family === 'IPv4' && !x.internal; });
+  return flatter.find(x => x.family === 'IPv4' && !x.internal);
 };
 
-var isMulticast = function (addr) {
+var isMulticast = addr => {
   var check = addr.match(/([0-2]?[0-9]?[0-9])\./);
   if (check) {
     return +check[1] >= 224 && +check[1] <= 239;

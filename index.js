@@ -19,5 +19,6 @@ module.exports = {
   Grain : require('./model/Grain.js'),
   SDPProcessing : require('./util/SDPProcessing.js'),
   Net : require('./util/Net.js'),
+  PTPMaths : require('./util/PTPMaths.js'),
   Multiflows : require('./util/Multiflows.js')
 };
