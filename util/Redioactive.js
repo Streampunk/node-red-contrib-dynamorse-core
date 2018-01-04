@@ -34,7 +34,7 @@ var isEnd = function (x) {
     x.constructor === End.prototype.constructor;
 };
 var theEnd = new End;
-const cableBase = '92138a77-909e-4510-aa9';
+const cableBase = '92138a77-909e-4510-aa';
 
 var noTiming = true;
 
@@ -173,8 +173,9 @@ function makeCable(flows) {
   }
   generateIDs(flows);
   cables[this.config.id] = flows;
-  flows.id = (m => `${cableBase}${m[1]}-${m[2]}${m[3]}`)(
-    this.config.id.match(/([A-Fa-f0-9])([A-Fa-f0-9]{6})\.([A-Fa-f0-9]{6})/));
+  flows.id = (([l, r]) => `${cableBase}${l.slice(0, 2)}-${l.slice(2)}${r}`)(
+    (([l, r]) => [l.padStart(8, '0'), r.padStart(6, '0')])(this.config.id.split('.')));
+  console.log('>>>', this.config.id, flows.id);
   this.config.wires[0].forEach(w => {
     if (pending[w]) {
       pending[w].filter(m => this.config.id === m.id)

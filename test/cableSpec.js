@@ -57,6 +57,10 @@ TestUtil.nodeRedTest('Cables: a video funnel->spout flow is posted to Node-RED',
   // t.comment(`Message: ${JSON.stringify(msgObj)}`);
   if (msgObj.hasOwnProperty('made')) {
     const flow = msgObj.made;
+    t.ok(flow.id.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/),
+      `cable has a UUID identifier ${flow.id}.`);
+    t.equal(flow.id.slice(-6), funnel1NodeId.slice(-6),
+      `identifier is related to test flow ID ${funnel1NodeId}.`);
     t.ok(flow.hasOwnProperty('video'), 'cable contains the expected flow type');
     t.equal(flow.video.length, 1, 'cable contains the expected quantity of flow type');
     t.equal(flow.video[0].name, 'video[0]', 'flow has the expected name');
