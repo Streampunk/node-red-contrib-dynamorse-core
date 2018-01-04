@@ -34,6 +34,7 @@ var isEnd = function (x) {
     x.constructor === End.prototype.constructor;
 };
 var theEnd = new End;
+const cableBase = '92138a77-909e-4510-aa9';
 
 var noTiming = true;
 
@@ -172,6 +173,8 @@ function makeCable(flows) {
   }
   generateIDs(flows);
   cables[this.config.id] = flows;
+  flows.id = (m => `${cableBase}${m[1]}-${m[2]}${m[3]}`)(
+    this.config.id.match(/([A-Fa-f0-9])([A-Fa-f0-9]{6})\.([A-Fa-f0-9]{6})/));
   this.config.wires[0].forEach(w => {
     if (pending[w]) {
       pending[w].filter(m => this.config.id === m.id)
@@ -216,7 +219,7 @@ function findCable(g) {
       pending[node.config.id] = [];
       var p = [];
       missingCables.forEach(c => {
-        p.push(new Promise(resolve => 
+        p.push(new Promise(resolve =>
           pending[node.config.id].push({ id: c, fn: () => resolve(c) })
         ));
       });
@@ -262,7 +265,7 @@ function Funnel (config) {
   var ws = this.context().global.get('ws');
   this.config = config;
   this.initCabling();
-  
+
   // console.log('***', util.inspect(this.setStatus, { showHidden: true }));
   node.setStatus('grey', 'ring', 'initialising');
   var maxBuffer = 10;
@@ -502,7 +505,7 @@ function Valve (config) {
   this.wsMsg = new webSockMsg(node, ws, config.name||'valve');
   this.config = config;
   this.initCabling();
-  
+
   this.nodeStatus = '';
   this.setStatus = setStatus.bind(this);
   var workTimes = [];
@@ -701,7 +704,7 @@ function Spout (config) {
   var numStreams = config.numStreams||1;
   var numEnds = 0;
   this.config = config;
-  
+
   var eachFn = null;
   var doneFn = () => { };
   var errorFn = (err) => { // Default error handler shuts the pipeline
