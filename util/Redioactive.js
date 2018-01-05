@@ -175,7 +175,6 @@ function makeCable(flows) {
   cables[this.config.id] = flows;
   flows.id = (([l, r]) => `${cableBase}${l.slice(0, 2)}-${l.slice(2)}${r}`)(
     (([l, r]) => [l.padStart(8, '0'), r.padStart(6, '0')])(this.config.id.split('.')));
-  console.log('>>>', this.config.id, flows.id);
   this.config.wires[0].forEach(w => {
     if (pending[w]) {
       pending[w].filter(m => this.config.id === m.id)
