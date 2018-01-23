@@ -34,10 +34,13 @@ webSock.prototype.open = function(cb) {
 
 webSock.prototype.send = function(node, obj) {
   if (this.socket) {
-    if (this.socket.readyState === WebSocket.OPEN)
-      this.socket.send(JSON.stringify(obj, null, 2));
-    else
+    if (this.socket.readyState === WebSocket.OPEN) {
+      this.socket.send(JSON.stringify(obj, null, 2), error => {
+        if (error) node.warn(`Websocket send error: ${error}`);
+      });
+    } else {
       node.warn(`web socket not open when sending '${JSON.stringify(obj, null, 2)}'`);
+    }
   }
 };
 

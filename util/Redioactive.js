@@ -52,17 +52,20 @@ function webSockMsg(node, ws, src) {
   this.node = node;
   this.src = src;
   this.ws = ws;
+  this.opened = false;
 }
 webSockMsg.prototype.send = function(obj) {
   //console.log(`Send: ${this.src}, ${JSON.stringify(obj)}`);
   obj.src = this.src;
+  if (!this.opened)
+    return this.open().then(() => this.send(obj));
   if (this.ws)
     this.ws.send(this.node, obj);
 };
 webSockMsg.prototype.open = function () {
   var self = this;
   return new Promise((resolve/*, reject*/) => {
-    self.ws.open(() => { resolve(); });
+    self.ws.open(() => { this.opened = true; resolve(); });
   });
 };
 
@@ -186,8 +189,7 @@ function makeCable(flows) {
   discovery.forEach(f => {
     f(this, flows);
   });
-  this.wsMsg.open().then(() => {
-    this.wsMsg.send({'made': flows, 'srcID': this.config.id, 'srcType': this.config.type}); });
+  this.wsMsg.send({'made': flows, 'srcID': this.config.id, 'srcType': this.config.type}); 
   return flows;
 }
 
@@ -211,8 +213,7 @@ function findCable(g) {
     var missingCables = cabling[node.config.id].filter(x => !cables.hasOwnProperty(x));
     if (0 === missingCables.length) {
       var cs = cabling[node.config.id].map(x => cables[x]);
-      node.wsMsg.open().then(() => {
-        node.wsMsg.send({'found': cs, 'srcID': node.config.id, 'srcType': node.config.type}); });
+      node.wsMsg.send({'found': cs, 'srcID': node.config.id, 'srcType': node.config.type});
       resolve(cs);
     } else {
       var resolved = false;
@@ -226,16 +227,14 @@ function findCable(g) {
       Promise.all(p).then(() => {
         resolved = true;
         var cs = cabling[node.config.id].map(x => cables[x]);
-        node.wsMsg.open().then(() => {
-          node.wsMsg.send({'found': cs, 'srcID': node.config.id, 'srcType': node.config.type}); });
+        node.wsMsg.send({'found': cs, 'srcID': node.config.id, 'srcType': node.config.type});
         resolve(cs);
       });
       setTimeout(() => {
         if (resolved === false) {
           console.trace(`Unable to find input wire for node with ID ${node.config.id} in cable database, now checking ledger.`);
           getNMOSCable(node, g).then(cs => {
-            node.wsMsg.open().then(() => {
-              node.wsMsg.send({'found': cs, 'srcID': node.config.id, 'srcType': node.config.type}); });
+            node.wsMsg.send({'found': cs, 'srcID': node.config.id, 'srcType': node.config.type});
             resolve(cs);
           }, () => reject(`Unable to find input wire for node with ID ${node.config.id} of type ${node.config.type} within 2s.`));
         }
@@ -293,7 +292,7 @@ function Funnel (config) {
       var payload = queue.shift();
       if (!isEnd(payload))
         node.wsMsg.send({'pull': payload});
-      logger.send({ punkd: payload });
+      // logger.send({ punkd: payload });
       if (isEnd(payload)) {
         work = () => { };
         next = () => {
@@ -344,7 +343,7 @@ function Funnel (config) {
         else
           node.wsMsg.send({'send': payload});
         pending = [];
-        logger.send({ punkd: payload });
+        // logger.send({ punkd: payload });
         if (isEnd(payload)) {
           work = () => { };
           next = () => {
@@ -365,7 +364,7 @@ function Funnel (config) {
       } else {
         node.setStatus('green', 'dot', 'generating');
       }
-    } // });
+    }
   };
   this.eventMuncher = (emitter, event, map) => {
     emitter.on(event, function () {
