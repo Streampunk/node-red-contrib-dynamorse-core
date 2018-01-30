@@ -22,6 +22,7 @@ module.exports = function (RED) {
     RED.nodes.createNode(this, config);
     redioactive.Spout.call(this, config);
     var cableChecked = false;
+    // let count = 0;
     this.each((x, next) => {
       this.log(`Received ${util.inspect(x)}.`);
       if (!Grain.isGrain(x)) {
@@ -31,7 +32,7 @@ module.exports = function (RED) {
         return;
       }
 
-      var nextJob = cableChecked ? 
+      var nextJob = cableChecked ?
         Promise.resolve(x) :
         this.findCable(x)
           .then(c => {
@@ -40,6 +41,8 @@ module.exports = function (RED) {
       cableChecked = true;
 
       nextJob.then(() => {
+        // console.log('>>> Look what spout HTTP GOT', count++,
+        //   Grain.prototype.formatTimestamp(x.ptpOrigin));
         if (config.timeout === 0) setImmediate(next);
         else setTimeout(next, config.timeout);
       });

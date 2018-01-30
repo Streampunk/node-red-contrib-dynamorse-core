@@ -189,7 +189,7 @@ function makeCable(flows) {
   discovery.forEach(f => {
     f(this, flows);
   });
-  this.wsMsg.send({'made': flows, 'srcID': this.config.id, 'srcType': this.config.type}); 
+  this.wsMsg.send({'made': flows, 'srcID': this.config.id, 'srcType': this.config.type});
   return flows;
 }
 
@@ -272,6 +272,7 @@ function Funnel (config) {
     config.maxBuffer = +config.maxBuffer;
   if (config.maxBuffer && typeof config.maxBuffer === 'number' && config.maxBuffer > 0)
     maxBuffer = config.maxBuffer|0;
+  config.headroom = 0;
 
   if (!ws) {
     var wsPort = 0;
@@ -325,14 +326,14 @@ function Funnel (config) {
       });
     } else {
       node.log(`Push received with value ${val}, queue length ${queue.length}, pending ${JSON.stringify(pending)}`);
-      if (queue.length <= maxBuffer) {
+      if (queue.length <= maxBuffer + config.headroom) {
         // node.log(queue);
         if (!isEnd(val))
           node.wsMsg.send({'push': val});
         queue.push(val);
       } else {
         node.wsMsg.send({'drop': val});
-        node.warn(`Dropping value ${val} from buffer as maximum length of ${maxBuffer} exceeded.`);
+        node.warn(`Dropping value ${val} from buffer as maximum length of ${maxBuffer} plus headroom of ${config.headroom} is exceeded.`);
       }
 
       if (pending.length === wireCount) {
@@ -357,7 +358,7 @@ function Funnel (config) {
           pull : pull
         });
       }
-      if (queue.length >= maxBuffer) {
+      if (queue.length >= maxBuffer + config.headroom) {
         node.setStatus('red', 'dot', 'overflow');
       } else if (queue.length >= 0.75 * maxBuffer) {
         node.setStatus('yellow', 'dot', '75% full');
@@ -515,6 +516,7 @@ function Valve (config) {
     config.maxBuffer = +config.maxBuffer;
   if (config.maxBuffer && typeof config.maxBuffer === 'number' && config.maxBuffer > 0)
     maxBuffer = config.maxBuffer|0;
+  config.headroom = 0;
 
   var pull = id => {
     node.log(`Pull received with id ${id}, queue length ${queue.length}, pending ${JSON.stringify(pending)}`);
@@ -557,7 +559,7 @@ function Valve (config) {
       });
     } else {
       node.log(`Push received with value ${val}, queue length ${queue.length}, pending ${JSON.stringify(pending)}`);
-      if (queue.length <= maxBuffer) {
+      if (queue.length <= maxBuffer + config.headroom) {
       //  node.log(queue);
         if (isEnd(val))
           node.wsMsg.send({'end': 0});
@@ -566,7 +568,7 @@ function Valve (config) {
         queue.push(val);
       } else {
         node.wsMsg.send({'drop': val});
-        node.warn(`Dropping value ${val} from buffer as maximum length of ${maxBuffer} exceeded.`);
+        node.warn(`Dropping value ${val} from buffer as maximum length of ${maxBuffer} plus headroom of ${config.headroom} is exceeded.`);
       }
 
       if (pending.length === wireCount) {
@@ -587,7 +589,7 @@ function Valve (config) {
         });
       }
 
-      if (queue.length > maxBuffer) {
+      if (queue.length > maxBuffer + config.headroom) {
         node.setStatus('red', 'dot', 'overflow');
         node.warn(`Queue length ${queue.length}`);
       } else if (queue.length >= 0.75 * maxBuffer) {
@@ -701,7 +703,7 @@ function Spout (config) {
   }
   this.wsMsg = new webSockMsg(node, ws, config.name||'spout');
   var numStreams = config.numStreams||1;
-  var numEnds = 0;
+  let numEnds = 0;
   this.config = config;
 
   var eachFn = null;
@@ -737,11 +739,14 @@ function Spout (config) {
     };
   };
   this.on('input', msg => {
+    // console.log('>>> Spout recieved', rcvCount++);
     if (msg.error) {
       node.setStatus('red', 'dot', 'error');
-      errorFn(msg.error, next(msg));
-    } else if (isEnd(msg.payload)) {
+      return errorFn(msg.error, next(msg));
+    }
+    if (isEnd(msg.payload)) {
       numEnds++;
+      // console.log('>>> Received end', config.name, numEnds, numStreams);
       if (numEnds === numStreams) {
         node.wsMsg.send({'end': 0});
         node.setStatus('grey', 'ring', 'done');
@@ -751,8 +756,9 @@ function Spout (config) {
         execDone();
       }
     } else {
+      // console.log('>>> Sending receive message', JSON.stringify(msg.payload));
+      node.wsMsg.send({'receive': msg.payload});
       if (eachFn) {
-        node.wsMsg.send({'receive': msg.payload});
         eachFn(msg.payload, next(msg));
       }
     }
