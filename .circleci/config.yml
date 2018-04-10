@@ -1,0 +1,47 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/Streampunk/node-red-contrib-dynamorse-core
+    parallelism: 1
+    shell: /bin/bash --login
+    environment:
+      CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
+      CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
+    docker:
+    - image: circleci/node:8
+      command: /sbin/init
+    steps:
+    - checkout
+    - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+    - restore_cache:
+        keys:
+        # This branch if available
+        - v1-dep-{{ .Branch }}-
+        # Default branch if not
+        - v1-dep-master-
+        # Any branch if there are none on the default branch - this should be unnecessary if you have your default branch configured correctly
+        - v1-dep-
+    - run: npm install --ignore-scripts
+    - run: npm install tap-xunit
+    - run: npm install node-red
+    - run: npm install pm2
+    - save_cache:
+        key: v1-dep-{{ .Branch }}-{{ epoch }}
+        paths:
+        - ./node_modules
+    - run: mkdir ~/.node-red
+    - run: mkdir -p $CIRCLE_ARTIFACTS/node-red
+    - run: mkdir -p $CIRCLE_TEST_REPORTS/eslint
+    - run: mkdir -p $CIRCLE_TEST_REPORTS/xunit
+    - run: echo 'export PATH="~/Streampunk/node-red-contrib-dynamorse-core/node_modules/.bin:$PATH"' >> $BASH_ENV
+    - run: pm2 start node_modules/.bin/node-red -l /tmp/circleci-artifacts/node-red/log.txt -- -u ~/.node-red
+    - run: sleep 2; node ~/.node-red/node_modules/node-red-contrib-dynamorse-core/scripts/dynamorse-setup.js
+    - run: eslint **/*.js -f junit -o /tmp/circleci-test-results/eslint/eslint.xml
+    - run: set -eo pipefail && npm test | tap-xunit > /tmp/circleci-test-results/xunit/results.xml
+
+    - store_test_results:
+        path: /tmp/circleci-test-results
+    - store_artifacts:
+        path: /tmp/circleci-artifacts
+    - store_artifacts:
+        path: /tmp/circleci-test-results
