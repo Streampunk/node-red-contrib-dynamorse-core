@@ -30,9 +30,11 @@ jobs:
         paths:
         - ./node_modules
     - run: mkdir ~/.node-red
+    - run: mkdir ~/.node-red/node_modules
     - run: mkdir -p $CIRCLE_ARTIFACTS/node-red
     - run: mkdir -p $CIRCLE_TEST_REPORTS/eslint
     - run: mkdir -p $CIRCLE_TEST_REPORTS/xunit
+    - run: cd ~/.node-red/node_modules; ln -s ~/Streampunk/node-red-contrib-dynamorse-core
     - run: echo 'export PATH="~/Streampunk/node-red-contrib-dynamorse-core/node_modules/.bin:$PATH"' >> $BASH_ENV
     - run: pm2 start node_modules/.bin/node-red -l /tmp/circleci-artifacts/node-red/log.txt -- -u ~/.node-red
     - run: sleep 2; node ~/.node-red/node_modules/node-red-contrib-dynamorse-core/scripts/dynamorse-setup.js
