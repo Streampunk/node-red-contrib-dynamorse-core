@@ -48,6 +48,82 @@ function make420PBuf(width, height) {
   return buf;
 }
 
+function make4175Buf(width, height) {
+  var pitchBytes = width * 5 / 2;
+  var buf = Buffer.alloc(pitchBytes * height);  
+  var yOff = 0;
+  for (var y=0; y<height; ++y) {
+    var xOff = 0;
+    for (var x=0; x<width; ++x) {
+      // uyvy, big-endian 10 bits each in 5 bytes
+      buf[yOff + xOff++] = 0x80;       
+      buf[yOff + xOff++] = 0x04;       
+      buf[yOff + xOff++] = 0x08;       
+      buf[yOff + xOff++] = 0x00;       
+      buf[yOff + xOff++] = 0x40;       
+    }
+    yOff += pitchBytes;
+  }   
+  return buf;
+}
+
+function makeYUV422P10Buf(width, height) {
+  var lumaPitchBytes = width * 2;
+  var chromaPitchBytes = lumaPitchBytes / 2;
+  var buf = Buffer.alloc(lumaPitchBytes * height * 2);  
+  var lOff = 0;
+  var uOff = lumaPitchBytes * height;
+  var vOff = uOff + chromaPitchBytes * height;
+
+  for (var y=0; y<height; ++y) {
+    var xlOff = 0;
+    var xcOff = 0;
+    for (var x=0; x<width; x+=2) {
+      buf.writeUInt16LE(0x0040, lOff + xlOff);
+      buf.writeUInt16LE(0x0040, lOff + xlOff + 2);
+      xlOff += 4;
+    
+      buf.writeUInt16LE(0x0200, uOff + xcOff);
+      buf.writeUInt16LE(0x0200, vOff + xcOff);
+      xcOff += 2;
+    }
+    lOff += lumaPitchBytes;
+    uOff += chromaPitchBytes;
+    vOff += chromaPitchBytes;
+  }
+  return buf;
+}
+
+function makeV210Buf(width, height) {
+  var pitchBytes = (width + (47 - (width - 1) % 48)) * 8 / 3;
+  var buf = Buffer.alloc(pitchBytes * height);
+  buf.fill(0);
+  var yOff = 0;
+  for (var y=0; y<height; ++y) {
+    var xOff = 0;
+    for (var x=0; x<(width-width%6)/6; ++x) {
+      buf.writeUInt32LE((0x200<<20) | (0x040<<10) | 0x200, yOff + xOff);
+      buf.writeUInt32LE((0x040<<20) | (0x200<<10) | 0x040, yOff + xOff + 4);
+      buf.writeUInt32LE((0x200<<20) | (0x040<<10) | 0x200, yOff + xOff + 8);
+      buf.writeUInt32LE((0x040<<20) | (0x200<<10) | 0x040, yOff + xOff + 12);
+      xOff += 16;
+    }
+
+    var remain = width%6;
+    if (remain) {
+      buf.writeUInt32LE((0x200<<20) | (0x040<<10) | 0x200, yOff + xOff);
+      if (2 === remain) {
+        buf.writeUInt32LE(0x040, yOff + xOff + 4);
+      } else if (4 === remain) {      
+        buf.writeUInt32LE((0x040<<20) | (0x200<<10) | 0x040, yOff + xOff + 4);
+        buf.writeUInt32LE((0x040<<10) | 0x200, yOff + xOff + 8);
+      }
+    }
+    yOff += pitchBytes;
+  }   
+  return buf;
+}
+
 function makeVideoTags(width, height, packing, encodingName, interlace) {
   var tags = {
     format : 'video',
@@ -56,8 +132,8 @@ function makeVideoTags(width, height, packing, encodingName, interlace) {
     packing: packing,
     encodingName: encodingName,
     colorimetry: 'BT709-2',
-    depth: 8,
-    sampling: 'YCbCr-4:2:0',
+    depth: ('420P'===packing) ? 8 : 10,
+    sampling: ('420P'===packing) ? 'YCbCr-4:2:0' : 'YCbCr-4:2:2',
     interlace: interlace === 1,
     clockRate: 90000,
     grainDuration: [1, 25]
@@ -93,8 +169,15 @@ module.exports = function (RED) {
     redioactive.Funnel.call(this, config);
 
     var srcDuration = [ 1, 25 ];
+    var makeBuf;
+    switch (config.packing) {
+    case 'pgroup': makeBuf = make4175Buf; break;
+    case 'YUV422P10': makeBuf = makeYUV422P10Buf; break;
+    case 'v210': makeBuf = makeV210Buf; break;
+    default : makeBuf = make420PBuf;
+    }
     var srcBuf = (config.format==='video') ?
-      make420PBuf(+config.width, +config.height) :
+      makeBuf(+config.width, +config.height) :
       makeAudioBuf(+config.channels, +config.bitsPerSample, srcDuration);
 
     function makeGrain(b, baseTime, flowId, sourceId) {
@@ -113,8 +196,10 @@ module.exports = function (RED) {
     this.count = 0;
     var flowID = null;
     var sourceID = null;
+    var packing = config.packing || '420P';
+    var encodingName = ('h264'===packing)?'h264':'raw';
     var tags = (config.format === 'video') ?
-      makeVideoTags(+config.width, +config.height, '420P', 'raw', 0) :
+      makeVideoTags(+config.width, +config.height, packing, encodingName, 0) :
       makeAudioTags(+config.channels, +config.bitsPerSample);
     this.baseTime = [ Date.now() / 1000|0, (Date.now() % 1000) * 1000000 ];
 

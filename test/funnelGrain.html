@@ -23,6 +23,7 @@
       delay : { value : "0", validate : RED.validators.number() },
       numPushes : { value : 10, validate : RED.validators.number() },
       format : { value : "video" },
+      packing : { value : "420P"},
       width : { value : 1920, validate : RED.validators.number() },
       height : { value : 1080, validate : RED.validators.number() },
       channels : { value : 2, validate : RED.validators.number() },
@@ -52,6 +53,15 @@
     <select id="node-input-format">
       <option value="video" selected>video</option>
       <option value="audio">audio</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label for="node-input-packing"><i class="fa fa-suitcase"></i> packing</label>
+    <select id="node-input-packing">
+      <option value="420P" selected>420P</option>
+      <option value="pgroup">RFC4175</option>
+      <option value="v210">v210</option>
+      <option value="YUV422P10">YUV422P10</option>
     </select>
   </div>
   <div class="form-row"><i class="fa fa-arrows"></i> video details:</div>
