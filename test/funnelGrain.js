@@ -220,7 +220,7 @@ module.exports = function (RED) {
         push(null, redioactive.end);
       }
     });
-    this.on('close', this.close);
+    this.on('close', () => {});
   }
 
   util.inherits(FunnelGrain, redioactive.Funnel);

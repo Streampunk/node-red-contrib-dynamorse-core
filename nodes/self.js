@@ -309,6 +309,7 @@ module.exports = function(RED) {
       logger = new Logger(properties.logHostname, +properties.logPort);
       globalContext.set('logger', logger);
     }
+    this.on('close', () => {});
   }
   RED.nodes.registerType('self', Self);
 };

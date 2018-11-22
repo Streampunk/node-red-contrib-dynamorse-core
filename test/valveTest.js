@@ -59,8 +59,7 @@ module.exports = function (RED) {
         });
       }
     });
-  
-    this.on('close', this.close);
+    this.on('close', () => {});
   }
 
   util.inherits(ValveTest, redioactive.Valve);

@@ -107,7 +107,7 @@ module.exports = function (RED) {
         next(redioactive.noTiming);
       }
     });
-    this.on('close', this.close);
+    this.on('close', () => {});
   }
   util.inherits(Splice, redioactive.Valve);
   RED.nodes.registerType('splice', Splice);

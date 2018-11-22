@@ -55,8 +55,7 @@ module.exports = function (RED) {
     this.done(() => {
       this.log('Thank goodness that is over!');
     });
-
-    this.on('close', this.close);
+    this.on('close', () => {});
   }
   util.inherits(TestSpout, redioactive.Spout);
   RED.nodes.registerType('spoutTest', TestSpout);

@@ -42,7 +42,7 @@ module.exports = function (RED) {
     redioactive.Funnel.call(this, config);
 
     this.highland(new inlet(config));
-    this.on('close', this.close);
+    this.on('close', () => {});
   }
 
   util.inherits(FunnelCount, redioactive.Funnel);

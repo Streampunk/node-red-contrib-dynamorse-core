@@ -100,8 +100,7 @@ module.exports = function (RED) {
       clearInterval(memTimer);
       this.log('Dashboard Done!');
     });
-
-    this.on('close', this.close);
+    this.on('close', () => {});
   }
   util.inherits(Dashboard, redioactive.Spout);
   RED.nodes.registerType('dashboard', Dashboard);

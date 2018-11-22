@@ -471,14 +471,16 @@ function Funnel (config) {
       this.send(dashObj);
     }
   }, 1000);
-  this.close = (/*done*/) => { // done is undefined :-(
+  this.on('close', (removed, done) => {
+    node.log(`Close funnel '${node.type}' - ${removed?'deleted':'restarted'}`);
     node.setStatus('yellow', 'ring', 'closing');
     next = () => {
       node.setStatus('grey', 'ring', 'closed');
     };
     this.context().flow.set('flowResetFlag', false);
     setTimeout(() => { clearInterval(metrics); }, 2000);
-  };
+    done();
+  });
 }
 
 Funnel.prototype.initCabling = initCabling;
@@ -672,14 +674,16 @@ function Valve (config) {
       this.send(dashObj);
     }
   }, 1000);
-  this.close = (/*done*/) => { // done is undefined :-(
+  this.on('close', (removed, done) => {
+    node.log(`Close valve '${node.type}' - ${removed?'deleted':'restarted'}`);
     node.setStatus('yellow', 'ring', 'closing');
     next = () => {
       node.setStatus('grey', 'ring', 'closed');
     };
     this.context().flow.set('flowResetFlag', false);
     setTimeout(() => { clearInterval(metrics); }, 2000);
-  };
+    done();
+  });
 }
 
 Valve.prototype.initCabling = initCabling;
@@ -806,14 +810,16 @@ function Spout (config) {
       this.send(dashObj);
     }
   }, 1000);
-  this.close = (/*done*/) => {
+  this.on('close', (removed, done) => {
+    node.log(`Close spout '${node.type}' - ${removed?'deleted':'restarted'}`);
     node.wsMsg.send({'close': 0});
     if (ws) ws.close();
     ws = null;
     this.context().global.set('ws', null);
     this.context().flow.set('flowResetFlag', false);
     setTimeout(() => { clearInterval(metrics); }, 2000);
-  };
+    done();
+  });
   this.preFlightError = e => {
     node.error(`Preflight error: ${(e.message) ? e.message : e}.`);
     node.setStatus('red', 'ring', 'preflight fail');

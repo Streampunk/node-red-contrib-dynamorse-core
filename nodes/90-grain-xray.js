@@ -86,7 +86,7 @@ module.exports = function (RED) {
         next();
       }
     });
-    this.on('close', this.close);
+    this.on('close', () => {});
   }
   util.inherits(GrainDebug, redioactive.Valve);
   RED.nodes.registerType('grain-xray', GrainDebug);
