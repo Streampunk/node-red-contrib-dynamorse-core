@@ -38,7 +38,7 @@ jobs:
     - run: echo 'export PATH="~/Streampunk/node-red-contrib-dynamorse-core/node_modules/.bin:$PATH"' >> $BASH_ENV
     - run: pm2 start node_modules/.bin/node-red -l /tmp/circleci-artifacts/node-red/log.txt -- -u ~/.node-red
     - run: sleep 2; node ~/.node-red/node_modules/node-red-contrib-dynamorse-core/scripts/dynamorse-setup.js
-    - run: eslint **/*.js -f junit -o /tmp/circleci-test-results/eslint/eslint.xml
+    - run: eslint '**/*.js' -f junit -o /tmp/circleci-test-results/eslint/eslint.xml
     - run: set -eo pipefail && npm test | tap-xunit > /tmp/circleci-test-results/xunit/results.xml
 
     - store_test_results:
