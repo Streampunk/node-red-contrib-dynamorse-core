@@ -9,7 +9,6 @@ jobs:
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
     - image: circleci/node:10
-      command: /sbin/init
     steps:
     - checkout
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
