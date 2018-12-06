@@ -358,6 +358,17 @@ function Funnel (config) {
           pull : pull
         });
       }
+
+      if (0 === wireCount) {
+        // release any reservation in OpenCL buffer pool if no output wire connected
+        if (val.hasOwnProperty('buffers')) {
+          val.buffers.forEach(outBuf => {
+            if (outBuf.hasOwnProperty('release'))
+              outBuf.release();
+          });
+        }
+      }
+
       if (queue.length >= maxBuffer + config.headroom) {
         node.setStatus('red', 'dot', 'overflow');
       } else if (queue.length >= 0.75 * maxBuffer) {
@@ -401,6 +412,7 @@ function Funnel (config) {
     ws.open(() => { next(); });
   };
   this.highland = stream => {
+    this.stream = stream;
     ws.open(() => {
       stream.consume((err, x, hpush, hnext) => {
         if (err) {
@@ -477,6 +489,7 @@ function Funnel (config) {
     next = () => {
       node.setStatus('grey', 'ring', 'closed');
     };
+    // if (this.stream) this.stream.destroy();
     this.context().flow.set('flowResetFlag', false);
     setTimeout(() => { clearInterval(metrics); }, 2000);
     done();
@@ -591,6 +604,16 @@ function Valve (config) {
         });
       }
 
+      if (0 === wireCount) {
+        // release any reservation in OpenCL buffer pool if no output wire connected
+        if (val.hasOwnProperty('buffers')) {
+          val.buffers.forEach(outBuf => {
+            if (outBuf.hasOwnProperty('release'))
+              outBuf.release();
+          });
+        }
+      }
+
       if (queue.length > maxBuffer + config.headroom) {
         node.setStatus('red', 'dot', 'overflow');
         node.warn(`Queue length ${queue.length}`);
@@ -627,8 +650,29 @@ function Valve (config) {
   var work = () => {
     node.warn('Empty work function called.');
   };
+
+  const setPush = (srcMsg, push) => {
+    if (srcMsg.hasOwnProperty('buffers')) {
+      srcMsg.buffers.forEach(srcBuf => {
+        if (srcBuf.hasOwnProperty('addRef'))
+          srcBuf.addRef();
+      });
+    }
+    return (err, val) => {
+      push(err, val);
+      if (srcMsg.hasOwnProperty('buffers')) {
+        srcMsg.buffers.forEach(srcBuf => {
+          if (srcBuf.hasOwnProperty('release'))
+            srcBuf.release();
+        });
+      }
+    };
+  };
+
   this.consume = cb => {
-    work = cb;
+    work = (err, msg, push, next) => {
+      cb(err, msg, setPush(msg, push), next);
+    };
     node.setStatus('green', 'dot', 'running');
   };
   this.getNMOSFlow = (grain, cb) => {
@@ -736,6 +780,12 @@ function Spout (config) {
     var startTime = process.hrtime();
     return (ignoreTiming) => {
       if (!ignoreTiming) workTimes.push(process.hrtime(startTime));
+      if (msg.payload.hasOwnProperty('buffers')) {
+        msg.payload.buffers.forEach(srcBuf => {
+          if (srcBuf.hasOwnProperty('release'))
+            srcBuf.release();
+        });
+      }
       setImmediate(() => {
         node.wsMsg.send({'pull': node.id});
         msg.pull(node.id);

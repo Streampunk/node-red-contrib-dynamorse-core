@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-dynamorse-core",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Setup and support for Streampunk Media's Node-RED nodes",
   "author": "Streampunk Media Ltd",
   "license": "Apache-2.0",
@@ -10,9 +10,9 @@
   "dependencies": {
     "fastqueue": "^0.1.0",
     "highland": "^2.13.0",
+    "nmos-ledger": "^1.0.20",
     "uuid": "^2.0.1",
-    "ws": "^6.1.2",
-    "nmos-ledger": "^1.0.20"
+    "ws": "^6.1.2"
   },
   "devDependencies": {
     "dynamorse-test": "^0.2.1",
